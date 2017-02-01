@@ -1,0 +1,80 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="RedTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">#f44336</item>
+        <item name="colorPrimaryDark">#d32f2f</item>
+        <item name="colorAccent">#ff5252</item>
+    </style>
+
+    <style name="PinkTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">#e91e63</item>
+        <item name="colorPrimaryDark">#c2185b</item>
+        <item name="colorAccent">#ff4081</item>
+    </style>
+
+    <style name="PurpleTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">#9c27b0</item>
+        <item name="colorPrimaryDark">#7b1fa2</item>
+        <item name="colorAccent">#e040fb</item>
+    </style>
+
+    <style name="DeepPurpleTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">#673ab7</item>
+        <item name="colorPrimaryDark">#512da8</item>
+        <item name="colorAccent">#7c4dff</item>
+    </style>
+
+    <style name="IndigoTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">#3f51b5</item>
+        <item name="colorPrimaryDark">#303f9f</item>
+        <item name="colorAccent">#536dfe</item>
+    </style>
+
+    <style name="BlueTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">#2196f3</item>
+        <item name="colorPrimaryDark">#1976d2</item>
+        <item name="colorAccent">#448aff</item>
+    </style>
+
+    <style name="GreenTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">#4caf50</item>
+        <item name="colorPrimaryDark">#388e3c</item>
+        <item name="colorAccent">#69f0ae</item>
+    </style>
+
+    <style name="OrangeTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">#ff9800</item>
+        <item name="colorPrimaryDark">#f57c00</item>
+        <item name="colorAccent">#ffab40</item>
+    </style>
+
+    <style name="BrownTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">#795548</item>
+        <item name="colorPrimaryDark">#5d4037</item>
+        <item name="colorAccent">#a1887f</item>
+    </style>
+
+    <style name="BleGreyTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">#607d8b</item>
+        <item name="colorPrimaryDark">#455a64</item>
+        <item name="colorAccent">#90a4ae</item>
+    </style>
+</resources>

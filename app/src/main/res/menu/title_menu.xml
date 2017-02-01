@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/change_city"
+        android:title="切换城市"/>
+
+    <item
+        android:id="@+id/update"
+        android:title="更新天气"/>
+
+    <item
+        android:id="@+id/watch_wallpaper"
+        android:title="隐藏天气"/>
+
+    <item
+        android:id="@+id/off_pic"
+        android:title="显示/隐藏背景"/>
+
+    <item
+        android:id="@+id/choose_color"
+        android:title="选择主题色"/>
+
+    <item
+        android:id="@+id/about"
+        android:title="关于"/>
+
+    <item
+        android:id="@+id/exit"
+        android:title="退出"/>
+</menu>
