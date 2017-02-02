@@ -14,6 +14,7 @@ import org.json.JSONObject;
 
 public class Utility
 {
+    //response为JSON数组，先把数组里每个省的信息对应到Province类，再将Province类添加到数据库。
     public static boolean handleProvinceResponse(String response)
     {
         if (!TextUtils.isEmpty(response))
@@ -91,7 +92,7 @@ public class Utility
         return false;
     }
 
-    //解析出来json数据，并返回实例化的weather类
+    //解析出来json数据，为一组天气数据，返回实例化的weather类
     public static Weather handleWeatherResponse(String response)
     {
         try

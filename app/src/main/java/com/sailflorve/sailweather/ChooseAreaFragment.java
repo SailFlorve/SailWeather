@@ -85,6 +85,7 @@ public class ChooseAreaFragment extends Fragment
                 }
                 else if (currentLevel == LEVEL_COUNTY)
                 {
+
                     String weatherId = countyList.get(position).getWeatherId();
                     if (getActivity() instanceof MainActivity)
                     {
@@ -123,6 +124,9 @@ public class ChooseAreaFragment extends Fragment
         queryProvinces();
     }
 
+    //从数据库里寻找province表的provinceid一列，并用其初始化privinceList
+    //如果还没有数据库，就用queryFromServer请求返回省数据的JSON数组，再加入数据库。
+    //dataList为listview的adapter绑定的list，通知list更新。
     private void queryProvinces()
     {
         titleText.setText("选择省/直辖市");
@@ -145,6 +149,7 @@ public class ChooseAreaFragment extends Fragment
             queryFromServer(address, "province");
         }
     }
+
 
     private void queryCities()
     {

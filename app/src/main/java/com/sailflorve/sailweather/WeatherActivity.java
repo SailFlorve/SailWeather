@@ -330,23 +330,13 @@ public class WeatherActivity extends AppCompatActivity
             @Override
             public void onResponse(Call call, final Response response) throws IOException
             {
-
+                final String updateStr = response.body().string();
                 runOnUiThread(new Runnable()
                 {
                     @Override
                     public void run()
                     {
-                        String updateStr = new String();
-                        try
-                        {
-                            updateStr = response.body().string();
-                            updateInfo.setText(updateStr);
-                        }
-                        catch (IOException e)
-                        {
-                            e.printStackTrace();
-                        }
-
+                        updateInfo.setText(updateStr);
                     }
                 });
             }

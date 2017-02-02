@@ -14,6 +14,7 @@ public class MainActivity extends AppCompatActivity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //如果已经存储了weather（天气JSON数组），直接进入天气界面，不选择城市。
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         if (prefs.getString("weather", null) != null)
         {
