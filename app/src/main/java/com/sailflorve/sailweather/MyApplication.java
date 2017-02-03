@@ -9,7 +9,6 @@ public class MyApplication extends Application
 {
     private static Context context;
 
-
     @Override
     public void onCreate()
     {

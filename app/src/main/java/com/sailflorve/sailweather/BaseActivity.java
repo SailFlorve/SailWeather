@@ -7,6 +7,7 @@ import android.util.Log;
 
 public class BaseActivity extends AppCompatActivity
 {
+    //方便观察Activity的生命周期
     @Override
     public void onCreate(Bundle savedInstanceState, PersistableBundle persistentState)
     {
@@ -38,21 +39,21 @@ public class BaseActivity extends AppCompatActivity
     @Override
     protected void onDestroy()
     {
-        Log.d(getClass().getSimpleName(),"onDestroy");
+        //Log.d(getClass().getSimpleName(),"onDestroy");
         super.onDestroy();
     }
 
     @Override
     protected void onStop()
     {
-        Log.d(getClass().getSimpleName(),"onStop");
+        //Log.d(getClass().getSimpleName(),"onStop");
         super.onStop();
     }
 
     @Override
     protected void onStart()
     {
-        Log.d(getClass().getSimpleName(),"onStart");
+        //Log.d(getClass().getSimpleName(),"onStart");
         super.onStart();
     }
 }
