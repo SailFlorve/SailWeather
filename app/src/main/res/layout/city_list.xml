@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="18sp"
+            android:layout_height="18sp"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="15dp"
+            android:src="@drawable/city_icon"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+
+            android:text="管理城市"
+            android:textColor="?attr/colorPrimary"
+            android:textSize="18sp"/>
+
+        <Button
+            android:id="@+id/add_city"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:layout_gravity="center_vertical"
+            android:background="#fff"
+            style="?android:attr/borderlessButtonStyle"
+            android:textColor="?attr/colorPrimary"
+            android:text="添加城市"/>
+    </LinearLayout>
+
+
+    <ListView
+        android:id="@+id/city_listview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="33dp"
+        android:layout_marginRight="33dp"
+        android:dividerHeight="0dp"
+        android:listSelector="@android:color/transparent">
+
+    </ListView>
+
+</LinearLayout>

@@ -54,40 +54,63 @@
             </ScrollView>
         </android.support.v4.widget.SwipeRefreshLayout>
         <!--侧滑菜单栏-->
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="start"
+            android:clickable="true"
             android:orientation="vertical">
 
-            <FrameLayout
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="1"
-                android:background="@color/colorPrimary">
-                <!--app背景图-->
-                <ImageView
-                    android:id="@+id/elva_image"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:scaleType="centerCrop"/>
+                android:layout_weight="1.2">
 
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent">
+                <include layout="@layout/app_primary"/>
+            </LinearLayout>
 
-                    <TextView
-                        android:id="@+id/app_name_text"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentBottom="true"
-                        android:layout_centerHorizontal="true"
-                        android:text="elVa天气"
-                        android:textColor="#fff"
-                        android:textSize="40sp"/>
-                </RelativeLayout>
-            </FrameLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="3"
+                android:background="#fff"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/theme_settings_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <include layout="@layout/theme_settings"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/bottom_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true">
+
+                    <include layout="@layout/others_settings"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/city_manager_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/theme_settings_layout"
+                    android:layout_above="@id/bottom_layout">
+
+                    <include layout="@layout/city_list"/>
+                </LinearLayout>
+
+
+            </RelativeLayout>
+
+
         </LinearLayout>
+
 
     </android.support.v4.widget.DrawerLayout>
 

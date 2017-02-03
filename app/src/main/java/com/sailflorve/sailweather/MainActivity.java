@@ -119,6 +119,7 @@ public class MainActivity extends BaseActivity
 
     private void useAutoLocation()
     {
+        CityManager.addCity("自动定位");
         Intent intent = new Intent(MainActivity.this, WeatherActivity.class);
         intent.putExtra("weather_id", "auto_loc");
         startActivity(intent);

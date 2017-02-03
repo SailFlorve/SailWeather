@@ -1,12 +1,9 @@
 package com.sailflorve.sailweather;
 
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Looper;
 import android.preference.PreferenceManager;
@@ -19,9 +16,12 @@ import android.support.v7.widget.PopupMenu;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -40,18 +40,21 @@ import com.sailflorve.sailweather.util.Settings;
 import com.sailflorve.sailweather.util.Utility;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.Callback;
-import okhttp3.FormBody;
-import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class WeatherActivity extends BaseActivity
+public class WeatherActivity extends BaseActivity implements View.OnClickListener
 {
     public DrawerLayout drawerLayout;
     private Button navButton;
     private Button menuButton;
+    private Button addCityButton;
+    private Button aboutButton;
+    private Button exitButton;
     private ScrollView weatherLayout;
     private TextView titleCity;
     private TextView titleUpdateTime;
@@ -76,6 +79,8 @@ public class WeatherActivity extends BaseActivity
     private LinearLayout aqiLayout;
     private ImageView appImage;
     private TextView bottomText;
+    private ListView savedCitiesListView;
+    private ListView themeListView;
 
     private final String weatherKey = "d8adf978646b45e2875b82c9fed6d3eb";
     private String mWeatherId;
@@ -83,10 +88,14 @@ public class WeatherActivity extends BaseActivity
     private Settings settings;
     private LocationClient client;
 
-    private final int VERSION_TO_ELVA = 0;
-    private final int VERSION_TO_PUBLIC = 1;
+    private final String CURRENT_VERSION = "1.5.0";
 
     private Boolean showBingPic;
+
+    private ArrayAdapter<String> adapter1;
+    private List<String> themeList = new ArrayList<>();
+
+    private ArrayAdapter<String> adapter2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -128,14 +137,26 @@ public class WeatherActivity extends BaseActivity
         appNameText = (TextView) findViewById(R.id.app_name_text);
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         navButton = (Button) findViewById(R.id.nav_button);
+        addCityButton = (Button) findViewById(R.id.add_city);
+        aboutButton = (Button) findViewById(R.id.about_button);
+        exitButton = (Button) findViewById(R.id.exit_button);
         fab = (ImageView) findViewById(R.id.float_button);
         menuButton = (Button) findViewById(R.id.menu_button);
         swipeRefresh = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh);
         aqiLayout = (LinearLayout) findViewById(R.id.aqi_layout);
+        savedCitiesListView = (ListView) findViewById(R.id.city_listview);
+        themeListView = (ListView) findViewById(R.id.theme_settings_listview);
         swipeRefresh.setColorSchemeResources(R.color.colorPrimary);
-
         client = new LocationClient(getApplicationContext());
         client.registerLocationListener(new MyLocationListener());
+        fab.setOnClickListener(this);
+        exitButton.setOnClickListener(this);
+        aboutButton.setOnClickListener(this);
+        addCityButton.setOnClickListener(this);
+        navButton.setOnClickListener(this);
+        menuButton.setOnClickListener(this);
+
+        initViewLists();
         initWeather();
         //设置下拉刷新事件
         swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener()
@@ -151,35 +172,101 @@ public class WeatherActivity extends BaseActivity
                 loadBingPic();
             }
         });
-        //选择城市按钮点击事件
-        navButton.setOnClickListener(new View.OnClickListener()
+
+        themeListView.setOnItemClickListener(new AdapterView.OnItemClickListener()
         {
             @Override
-            public void onClick(View v)
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id)
             {
-                drawerLayout.openDrawer(GravityCompat.START);
-            }
-        });
-        //菜单点击事件
-        menuButton.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View v)
-            {
-                showPopupMenu(menuButton);
-            }
-        });
-        //透明ImageView点击事件
-        fab.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View v)
-            {
-                weatherLayout.setVisibility(View.VISIBLE);
-                fab.setVisibility(View.INVISIBLE);
+                if (position == 0)
+                {
+                    chooseColor();
+                }
+                if (position == 1)
+                {
+                    showBingPic = (Boolean) settings.get("show_bing_pic", true);
+                    if (showBingPic)
+                    {
+                        settings.put("show_bing_pic", false);
+                        bingPicImg.setVisibility(View.INVISIBLE);
+                        themeList.set(1, "显示天气背景");
+                        adapter1.notifyDataSetChanged();
+                    }
+                    else if (!showBingPic)
+                    {
+                        settings.put("show_bing_pic", true);
+                        bingPicImg.setVisibility(View.VISIBLE);
+                        themeList.set(1, "隐藏天气背景");
+                        adapter1.notifyDataSetChanged();
+                    }
+                    drawerLayout.closeDrawer(GravityCompat.START);
+                }
             }
         });
 
+        savedCitiesListView.setOnItemClickListener(new AdapterView.OnItemClickListener()
+        {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id)
+            {
+                drawerLayout.closeDrawer(GravityCompat.START);
+                String cityName = CityManager.getCityList().get(position);
+                if (cityName.contains("自动定位"))
+                {
+                    settings.put("auto_loc", true);
+                    startLocation();
+                }
+                else
+                {
+                    settings.put("auto_loc", false);
+                    loadCityWeather(cityName);
+                }
+
+            }
+        });
+
+        savedCitiesListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener()
+        {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id)
+            {
+                CityManager.deleteCity(CityManager.getCityList().get(position));
+                adapter2.notifyDataSetChanged();
+                return true;
+            }
+        });
+    }
+
+    @Override
+    public void onClick(View v)
+    {
+        switch (v.getId())
+        {
+            //选择城市按钮点击事件
+            case R.id.nav_button:
+                drawerLayout.openDrawer(GravityCompat.START);
+                break;
+            //菜单点击事件
+            case R.id.menu_button:
+                showPopupMenu(menuButton);
+                break;
+            case R.id.float_button:
+                weatherLayout.setVisibility(View.VISIBLE);
+                fab.setVisibility(View.INVISIBLE);
+                break;
+            case R.id.about_button:
+                showAboutDialog();
+                break;
+            case R.id.exit_button:
+                finish();
+                break;
+            case R.id.add_city:
+                Intent intent = new Intent(WeatherActivity.this, MainActivity.class);
+                settings.put("change_city", true);
+                startActivity(intent);
+                break;
+            default:
+        }
     }
 
     @Override
@@ -194,6 +281,7 @@ public class WeatherActivity extends BaseActivity
     protected void onDestroy()
     {
         super.onDestroy();
+        CityManager.saveCities();
         settings.put("change_city", false);
     }
 
@@ -211,13 +299,6 @@ public class WeatherActivity extends BaseActivity
             {
                 switch (item.getItemId())
                 {
-                    case R.id.change_city:
-                        Intent intent = new Intent(WeatherActivity.this, MainActivity.class);
-                        settings.put("change_city", true);
-                        startActivity(intent);
-
-                        break;
-
                     case R.id.update:
                         requestWeather(mWeatherId);
                         loadBingPic();
@@ -227,31 +308,6 @@ public class WeatherActivity extends BaseActivity
                         Toast.makeText(WeatherActivity.this, "点击任意处恢复", Toast.LENGTH_SHORT).show();
                         weatherLayout.setVisibility(View.INVISIBLE);
                         fab.setVisibility(View.VISIBLE);
-                        break;
-
-                    case R.id.off_pic:
-                        showBingPic = (Boolean) settings.get("show_bing_pic", true);
-                        if (showBingPic)
-                        {
-                            settings.put("show_bing_pic", false);
-                            bingPicImg.setVisibility(View.INVISIBLE);
-                        }
-                        else if (!showBingPic)
-                        {
-                            settings.put("show_bing_pic", true);
-                            bingPicImg.setVisibility(View.VISIBLE);
-                        }
-                        break;
-
-                    case R.id.choose_color:
-                        chooseColor();
-                        break;
-
-                    case R.id.about:
-                        showAboutDialog();
-                        break;
-                    case R.id.exit:
-                        finish();
                         break;
                     default:
                 }
@@ -265,8 +321,10 @@ public class WeatherActivity extends BaseActivity
     //初始化app，包括显示数据、加载图片
     private void initWeather()
     {
+        adapter2.notifyDataSetChanged();
+
         appNameText.setText("Sail天气");
-        bottomText.setText("By SailFlorve");
+        bottomText.setText("By SailFlorve  Ver " + CURRENT_VERSION);
 
         //如果没有网络 使用默认背景图
         if (settings.get("bing_pic", null) == null || !Utility.isNetworkAvailable(WeatherActivity.this))
@@ -332,6 +390,24 @@ public class WeatherActivity extends BaseActivity
         }
     }
 
+    private void initViewLists()
+    {
+        themeList.add("选择主题色");
+        themeList.add("隐藏天气背景");
+        adapter1 = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, themeList);
+        themeListView.setAdapter(adapter1);
+        themeListView.setDividerHeight(0);
+
+        //一旦加载一个城市的天气，就添加列表；程序启动时读取列表；退出时保存列表。
+        CityManager.loadCities();
+
+        adapter2 = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, CityManager.getCityList());
+        savedCitiesListView.setAdapter(adapter2);
+        savedCitiesListView.setDividerHeight(0);
+
+
+    }
+
     private void showAboutDialog()
     {
         TextView developerInfo;
@@ -356,7 +432,7 @@ public class WeatherActivity extends BaseActivity
 
         developerInfo = (TextView) dialog.findViewById(R.id.developer_info);
         updateInfo = (TextView) dialog.findViewById(R.id.update_info);
-        developerInfo.setText("Sail天气是一款界面美观、功能方便、简单易用的天气软件。\n开发者：SailFlorve");
+        developerInfo.setText("Sail天气是一款界面美观、功能齐全、简单易用的天气软件。\n开发者：SailFlorve");
         updateInfo.setText("正在加载...");
         HttpUtil.sendOkHttpRequest("http://www.sailflorve.com/elvaweather/update/update.txt", new Callback()
         {
@@ -579,7 +655,6 @@ public class WeatherActivity extends BaseActivity
     }
 
 
-
     //选择主题对话框
     private void chooseColor()
     {
@@ -669,6 +744,50 @@ public class WeatherActivity extends BaseActivity
         client.setLocOption(option);
     }
 
+    private void loadCityWeather(String cityName)
+    {
+        HttpUtil.sendOkHttpRequestForCity("https://free-api.heweather.com/v5/search", cityName, new Callback()
+        {
+            @Override
+            public void onFailure(Call call, IOException e)
+            {
+                e.printStackTrace();
+                runOnUiThread(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        Toast.makeText(WeatherActivity.this, "获取城市信息失败，错误代码12", Toast.LENGTH_SHORT).show();
+                        swipeRefresh.setRefreshing(false);
+                    }
+                });
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException
+            {
+                final String responseText = response.body().string();
+                final CityInfo cityInfo = Utility.handleCityInfoResponse(responseText);
+                runOnUiThread(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        if (cityInfo != null && cityInfo.status.equals("ok"))
+                        {
+                            loadWeather(cityInfo.basic.id);
+                        }
+                        else
+                        {
+                            Toast.makeText(WeatherActivity.this, "获取城市信息失败，错误代码13", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+
+            }
+        });
+    }
+
     public class MyLocationListener implements BDLocationListener
     {
         @Override
@@ -676,55 +795,22 @@ public class WeatherActivity extends BaseActivity
         {
             String district = bdLocation.getDistrict();
             final String city = bdLocation.getCity();
-            Toast.makeText(WeatherActivity.this, "定位成功，当前城市:" + city, Toast.LENGTH_SHORT).show();
+            if (city != null)
+            {
+                Toast.makeText(WeatherActivity.this, "定位成功，当前城市:" + city, Toast.LENGTH_SHORT).show();
+            }
+            else
+            {
+                Toast.makeText(WeatherActivity.this, "定位失败，错误代码14", Toast.LENGTH_SHORT).show();
+            }
 
             String sendName = district;
             if (district.charAt(district.length() - 1) == '区')
             {
                 sendName = city;
             }
-
-            HttpUtil.sendOkHttpRequestForCity("https://free-api.heweather.com/v5/search", sendName, new Callback()
-            {
-                @Override
-                public void onFailure(Call call, IOException e)
-                {
-                    e.printStackTrace();
-                    runOnUiThread(new Runnable()
-                    {
-                        @Override
-                        public void run()
-                        {
-                            Toast.makeText(WeatherActivity.this, "获取城市信息失败，错误代码12", Toast.LENGTH_SHORT).show();
-                            swipeRefresh.setRefreshing(false);
-                        }
-                    });
-                }
-
-                @Override
-                public void onResponse(Call call, Response response) throws IOException
-                {
-                    final String responseText = response.body().string();
-                    final CityInfo cityInfo = Utility.handleCityInfoResponse(responseText);
-                    runOnUiThread(new Runnable()
-                    {
-                        @Override
-                        public void run()
-                        {
-                            if (cityInfo != null && cityInfo.status.equals("ok"))
-                            {
-                                settings.put("loc_city", cityInfo.basic.city);
-                                loadWeather(cityInfo.basic.id);
-                            }
-                            else
-                            {
-                                Toast.makeText(WeatherActivity.this, "获取城市信息失败，错误代码13", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    });
-
-                }
-            });
+            loadCityWeather(sendName);
+            settings.put("loc_city", sendName);
 
             client.stop();
         }
