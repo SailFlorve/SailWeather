@@ -87,13 +87,6 @@
                         android:textSize="40sp"/>
                 </RelativeLayout>
             </FrameLayout>
-
-            <fragment
-                android:id="@+id/choose_area_fragment"
-                android:name="com.sailflorve.sailweather.ChooseAreaFragment"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="3"/>
         </LinearLayout>
 
     </android.support.v4.widget.DrawerLayout>

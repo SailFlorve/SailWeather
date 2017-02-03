@@ -1,11 +1,15 @@
 package com.sailflorve.sailweather.util;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.text.TextUtils;
 
 import com.google.gson.Gson;
 import com.sailflorve.sailweather.db.City;
 import com.sailflorve.sailweather.db.County;
 import com.sailflorve.sailweather.db.Province;
+import com.sailflorve.sailweather.gson.CityInfo;
 import com.sailflorve.sailweather.gson.Weather;
 
 import org.json.JSONArray;
@@ -107,5 +111,42 @@ public class Utility
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static CityInfo handleCityInfoResponse(String response)
+    {
+        try
+        {
+            JSONObject jsonObject = new JSONObject(response);
+            JSONArray jsonArray = jsonObject.getJSONArray("HeWeather5");
+            String cityContent = jsonArray.getJSONObject(0).toString();
+            return new Gson().fromJson(cityContent, CityInfo.class);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    //返回网络是否畅通
+    public static boolean isNetworkAvailable(Context context)
+    {
+        ConnectivityManager connectivity = (ConnectivityManager) context
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivity != null)
+        {
+            NetworkInfo info = connectivity.getActiveNetworkInfo();
+            if (info != null && info.isConnected())
+            {
+                // 当前网络是连接的
+                if (info.getState() == NetworkInfo.State.CONNECTED)
+                {
+                    // 当前所连接的网络可用
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

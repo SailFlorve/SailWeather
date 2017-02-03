@@ -12,7 +12,6 @@ public class County extends DataSupport
 
     private int cityId;
 
-
     public int getId()
     {
         return id;

@@ -2,6 +2,7 @@ package com.sailflorve.sailweather;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
@@ -13,7 +14,6 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.PopupMenu;
 import android.view.LayoutInflater;
@@ -26,19 +26,28 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.baidu.location.BDLocation;
+import com.baidu.location.BDLocationListener;
+import com.baidu.location.LocationClient;
+import com.baidu.location.LocationClientOption;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.util.Util;
+import com.sailflorve.sailweather.gson.CityInfo;
 import com.sailflorve.sailweather.gson.Forecast;
 import com.sailflorve.sailweather.gson.Weather;
 import com.sailflorve.sailweather.util.HttpUtil;
+import com.sailflorve.sailweather.util.Settings;
 import com.sailflorve.sailweather.util.Utility;
 
 import java.io.IOException;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class WeatherActivity extends AppCompatActivity
+public class WeatherActivity extends BaseActivity
 {
     public DrawerLayout drawerLayout;
     private Button navButton;
@@ -63,34 +72,34 @@ public class WeatherActivity extends AppCompatActivity
     private ImageView weatherPic;
     private TextView windInfo;
     public SwipeRefreshLayout swipeRefresh;
-    private String mWeatherId;
     private ImageView fab;
     private LinearLayout aqiLayout;
-
     private ImageView appImage;
     private TextView bottomText;
 
-    private SharedPreferences prefs;
-    private SharedPreferences.Editor editor;
     private final String weatherKey = "d8adf978646b45e2875b82c9fed6d3eb";
+    private String mWeatherId;
+
+    private Settings settings;
+    private LocationClient client;
 
     private final int VERSION_TO_ELVA = 0;
     private final int VERSION_TO_PUBLIC = 1;
 
-    private boolean showBingPic;
+    private Boolean showBingPic;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        settings = new Settings(this);
         if (Build.VERSION.SDK_INT >= 21)
         {
             View decorView = getWindow().getDecorView();
             decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
             getWindow().setStatusBarColor(Color.TRANSPARENT);
             //选择并设置主题
-            int theme = prefs.getInt("current_theme", R.style.AppTheme);
+            int theme = (int) settings.get("current_theme", R.style.AppTheme);
             setTheme(theme);
         }
         setContentView(R.layout.activity_weather);
@@ -124,8 +133,9 @@ public class WeatherActivity extends AppCompatActivity
         swipeRefresh = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh);
         aqiLayout = (LinearLayout) findViewById(R.id.aqi_layout);
         swipeRefresh.setColorSchemeResources(R.color.colorPrimary);
-        editor = PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this).edit();
 
+        client = new LocationClient(getApplicationContext());
+        client.registerLocationListener(new MyLocationListener());
         initWeather();
         //设置下拉刷新事件
         swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener()
@@ -133,6 +143,10 @@ public class WeatherActivity extends AppCompatActivity
             @Override
             public void onRefresh()
             {
+                if ((Boolean) settings.get("auto_loc", false))
+                {
+                    mWeatherId = "auto_loc";
+                }
                 requestWeather(mWeatherId);
                 loadBingPic();
             }
@@ -168,6 +182,21 @@ public class WeatherActivity extends AppCompatActivity
 
     }
 
+    @Override
+    protected void onNewIntent(Intent intent)
+    {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        initWeather();
+    }
+
+    @Override
+    protected void onDestroy()
+    {
+        super.onDestroy();
+        settings.put("change_city", false);
+    }
+
     //创建菜单
     private void showPopupMenu(View view)
     {
@@ -183,7 +212,10 @@ public class WeatherActivity extends AppCompatActivity
                 switch (item.getItemId())
                 {
                     case R.id.change_city:
-                        drawerLayout.openDrawer(GravityCompat.START);
+                        Intent intent = new Intent(WeatherActivity.this, MainActivity.class);
+                        settings.put("change_city", true);
+                        startActivity(intent);
+
                         break;
 
                     case R.id.update:
@@ -198,17 +230,15 @@ public class WeatherActivity extends AppCompatActivity
                         break;
 
                     case R.id.off_pic:
-                        showBingPic = prefs.getBoolean("show_bing_pic", true);
-                        if (showBingPic == true)
+                        showBingPic = (Boolean) settings.get("show_bing_pic", true);
+                        if (showBingPic)
                         {
-                            editor.putBoolean("show_bing_pic", false);
-                            editor.apply();
+                            settings.put("show_bing_pic", false);
                             bingPicImg.setVisibility(View.INVISIBLE);
                         }
-                        else if (showBingPic == false)
+                        else if (!showBingPic)
                         {
-                            editor.putBoolean("show_bing_pic", true);
-                            editor.apply();
+                            settings.put("show_bing_pic", true);
                             bingPicImg.setVisibility(View.VISIBLE);
                         }
                         break;
@@ -231,18 +261,22 @@ public class WeatherActivity extends AppCompatActivity
         popupMenu.show();
     }
 
+
     //初始化app，包括显示数据、加载图片
     private void initWeather()
     {
         appNameText.setText("Sail天气");
         bottomText.setText("By SailFlorve");
-        if (prefs.getString("bing_pic", null) == null || isNetworkAvailable(WeatherActivity.this) == false)
+
+        //如果没有网络 使用默认背景图
+        if (settings.get("bing_pic", null) == null || !Utility.isNetworkAvailable(WeatherActivity.this))
         {
             Glide.with(WeatherActivity.this).load(R.drawable.bg).into(bingPicImg);
             Glide.with(WeatherActivity.this).load(R.drawable.weather_pic).into(appImage);
         }
 
-        showBingPic = prefs.getBoolean("show_bing_pic", true);
+        showBingPic = (Boolean) settings.get("show_bing_pic", true);
+
         if (showBingPic == true)
         {
             bingPicImg.setVisibility(View.VISIBLE);
@@ -252,16 +286,31 @@ public class WeatherActivity extends AppCompatActivity
             bingPicImg.setVisibility(View.INVISIBLE);
         }
 
-        String weatherString = prefs.getString("weather", null);
+        String weatherString = (String) settings.get("weather", null);
 
         if (weatherString != null)
         {
             //有缓存，直接解析天气
             Weather weather = Utility.handleWeatherResponse(weatherString);
-            mWeatherId = weather.basic.weatherId;
+            if (!(Boolean) settings.get("auto_loc", false))
+            {
+                mWeatherId = weather.basic.cityWeatherId;
+            }
+            else
+            {
+                mWeatherId = "auto_loc";
+            }
             showWeatherInfo(weather);
+
+            //如果是申请了切换城市，更新城市天气id
+            if ((Boolean) settings.get("change_city", false))
+            {
+                mWeatherId = getIntent().getStringExtra("weather_id");
+                settings.put("change_city", false);
+            }
             requestWeather(mWeatherId);
         }
+
         else
         {
             titleCity.setText("未选择城市");
@@ -281,8 +330,6 @@ public class WeatherActivity extends AppCompatActivity
             mWeatherId = getIntent().getStringExtra("weather_id");
             requestWeather(mWeatherId);
         }
-
-
     }
 
     private void showAboutDialog()
@@ -349,6 +396,20 @@ public class WeatherActivity extends AppCompatActivity
     {
         swipeRefresh.setRefreshing(true);
         loadBingPic();
+
+        if (weatherId.equals("auto_loc"))
+        {
+            startLocation();
+        }
+        else
+        {
+            loadWeather(weatherId);
+        }
+        swipeRefresh.setRefreshing(false);
+    }
+
+    private void loadWeather(final String weatherId)
+    {
         String weatherUrl = "http://guolin.tech/api/weather?cityid=" +
                 weatherId + "&key=" + weatherKey;
         HttpUtil.sendOkHttpRequest(weatherUrl, new Callback()
@@ -380,9 +441,7 @@ public class WeatherActivity extends AppCompatActivity
                     {
                         if (weather != null && "ok".equals(weather.status))
                         {
-                            SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this).edit();
-                            editor.putString("weather", responseText);
-                            editor.apply();
+                            settings.put("weather", responseText);
                             showWeatherInfo(weather);
                             mWeatherId = weatherId;
                         }
@@ -390,7 +449,7 @@ public class WeatherActivity extends AppCompatActivity
                         {
                             Toast.makeText(WeatherActivity.this, "获取天气信息失败，错误代码11", Toast.LENGTH_SHORT).show();
                         }
-                        swipeRefresh.setRefreshing(false);
+
                     }
                 });
             }
@@ -513,29 +572,13 @@ public class WeatherActivity extends AppCompatActivity
     //加载天气晴雨图标
     private void loadWeatherIcon(final int resourceId, ImageView imageView)
     {
-        Glide.with(WeatherActivity.this).load(resourceId).into(imageView);
+        if (Util.isOnMainThread())
+        {
+            Glide.with(getApplicationContext()).load(resourceId).into(imageView);
+        }
     }
 
-    //返回网络是否畅通
-    public static boolean isNetworkAvailable(Context context)
-    {
-        ConnectivityManager connectivity = (ConnectivityManager) context
-                .getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (connectivity != null)
-        {
-            NetworkInfo info = connectivity.getActiveNetworkInfo();
-            if (info != null && info.isConnected())
-            {
-                // 当前网络是连接的
-                if (info.getState() == NetworkInfo.State.CONNECTED)
-                {
-                    // 当前所连接的网络可用
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
+
 
     //选择主题对话框
     private void chooseColor()
@@ -557,40 +600,39 @@ public class WeatherActivity extends AppCompatActivity
                 switch (which)
                 {
                     case 0:
-                        editor.putInt("current_theme", R.style.AppTheme);
+                        settings.put("current_theme", R.style.AppTheme);
                         break;
                     case 1:
-                        editor.putInt("current_theme", R.style.RedTheme);
+                        settings.put("current_theme", R.style.RedTheme);
                         break;
                     case 2:
-                        editor.putInt("current_theme", R.style.PinkTheme);
+                        settings.put("current_theme", R.style.PinkTheme);
                         break;
                     case 3:
-                        editor.putInt("current_theme", R.style.PurpleTheme);
+                        settings.put("current_theme", R.style.PurpleTheme);
                         break;
                     case 4:
-                        editor.putInt("current_theme", R.style.DeepPurpleTheme);
+                        settings.put("current_theme", R.style.DeepPurpleTheme);
                         break;
                     case 5:
-                        editor.putInt("current_theme", R.style.IndigoTheme);
+                        settings.put("current_theme", R.style.IndigoTheme);
                         break;
                     case 6:
-                        editor.putInt("current_theme", R.style.BlueTheme);
+                        settings.put("current_theme", R.style.BlueTheme);
                         break;
                     case 7:
-                        editor.putInt("current_theme", R.style.GreenTheme);
+                        settings.put("current_theme", R.style.GreenTheme);
                         break;
                     case 8:
-                        editor.putInt("current_theme", R.style.OrangeTheme);
+                        settings.put("current_theme", R.style.OrangeTheme);
                         break;
                     case 9:
-                        editor.putInt("current_theme", R.style.BrownTheme);
+                        settings.put("current_theme", R.style.BrownTheme);
                         break;
                     case 10:
-                        editor.putInt("current_theme", R.style.BleGreyTheme);
+                        settings.put("current_theme", R.style.BleGreyTheme);
                         break;
                 }
-                editor.apply();
             }
         });
 
@@ -612,5 +654,79 @@ public class WeatherActivity extends AppCompatActivity
             }
         });
         builder.show();
+    }
+
+    public void startLocation()
+    {
+        initLocation();
+        client.start();
+    }
+
+    private void initLocation()
+    {
+        LocationClientOption option = new LocationClientOption();
+        option.setIsNeedAddress(true);
+        client.setLocOption(option);
+    }
+
+    public class MyLocationListener implements BDLocationListener
+    {
+        @Override
+        public void onReceiveLocation(BDLocation bdLocation)
+        {
+            String district = bdLocation.getDistrict();
+            final String city = bdLocation.getCity();
+            Toast.makeText(WeatherActivity.this, "定位成功，当前城市:" + city, Toast.LENGTH_SHORT).show();
+
+            String sendName = district;
+            if (district.charAt(district.length() - 1) == '区')
+            {
+                sendName = city;
+            }
+
+            HttpUtil.sendOkHttpRequestForCity("https://free-api.heweather.com/v5/search", sendName, new Callback()
+            {
+                @Override
+                public void onFailure(Call call, IOException e)
+                {
+                    e.printStackTrace();
+                    runOnUiThread(new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            Toast.makeText(WeatherActivity.this, "获取城市信息失败，错误代码12", Toast.LENGTH_SHORT).show();
+                            swipeRefresh.setRefreshing(false);
+                        }
+                    });
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException
+                {
+                    final String responseText = response.body().string();
+                    final CityInfo cityInfo = Utility.handleCityInfoResponse(responseText);
+                    runOnUiThread(new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            if (cityInfo != null && cityInfo.status.equals("ok"))
+                            {
+                                settings.put("loc_city", cityInfo.basic.city);
+                                loadWeather(cityInfo.basic.id);
+                            }
+                            else
+                            {
+                                Toast.makeText(WeatherActivity.this, "获取城市信息失败，错误代码13", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+
+                }
+            });
+
+            client.stop();
+        }
     }
 }
