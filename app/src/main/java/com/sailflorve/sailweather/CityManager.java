@@ -1,6 +1,8 @@
 package com.sailflorve.sailweather;
 
 
+import android.widget.Toast;
+
 import com.sailflorve.sailweather.db.City;
 import com.sailflorve.sailweather.util.Settings;
 
@@ -18,6 +20,7 @@ public class CityManager
     static
     {
         settings = new Settings(MyApplication.getContext());
+        cityList = new ArrayList<>();
     }
 
     public static void loadCities()
@@ -57,6 +60,7 @@ public class CityManager
 
     public static void deleteCity(String cityName)
     {
+        Toast.makeText(MyApplication.getContext(), "已删除 "+cityName, Toast.LENGTH_SHORT).show();
         cityList.remove(cityName);
         saveCities();
     }

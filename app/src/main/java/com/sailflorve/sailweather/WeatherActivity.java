@@ -89,7 +89,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     private Settings settings;
     private LocationClient client;
 
-    private final String CURRENT_VERSION = "1.5.1";
+    private final String CURRENT_VERSION = "1.5.5";
 
     private Boolean showBingPic;
 
@@ -211,6 +211,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id)
             {
+                swipeRefresh.setRefreshing(true);
                 drawerLayout.closeDrawer(GravityCompat.START);
                 String cityName = CityManager.getCityList().get(position);
                 if (cityName.contains("自动定位"))
@@ -335,8 +336,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         }
 
         showBingPic = (Boolean) settings.get("show_bing_pic", true);
-
-        if (showBingPic == true)
+        if (showBingPic)
         {
             bingPicImg.setVisibility(View.VISIBLE);
         }
@@ -393,8 +393,17 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
 
     private void initViewLists()
     {
+
         themeList.add("选择主题色");
-        themeList.add("隐藏天气背景");
+        showBingPic = (Boolean) settings.get("show_bing_pic", true);
+        if (!showBingPic)
+        {
+            themeList.add("显示天气背景");
+        }
+        else
+        {
+            themeList.add("隐藏天气背景");
+        }
         adapter1 = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, themeList);
         themeListView.setAdapter(adapter1);
         themeListView.setDividerHeight(0);
@@ -754,7 +763,6 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                     public void run()
                     {
                         Toast.makeText(WeatherActivity.this, "获取城市信息失败，错误代码12", Toast.LENGTH_SHORT).show();
-                        swipeRefresh.setRefreshing(false);
                     }
                 });
             }
@@ -782,6 +790,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
 
             }
         });
+        swipeRefresh.setRefreshing(false);
     }
 
     private void checkUpdate()
@@ -855,7 +864,6 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             }
             loadCityWeather(sendName);
             settings.put("loc_city", sendName);
-
             client.stop();
         }
     }
