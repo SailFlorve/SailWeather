@@ -4,6 +4,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Looper;
 import android.preference.PreferenceManager;
@@ -88,7 +89,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     private Settings settings;
     private LocationClient client;
 
-    private final String CURRENT_VERSION = "1.5.0";
+    private final String CURRENT_VERSION = "1.5.1";
 
     private Boolean showBingPic;
 
@@ -156,6 +157,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         navButton.setOnClickListener(this);
         menuButton.setOnClickListener(this);
 
+        checkUpdate();
         initViewLists();
         initWeather();
         //设置下拉刷新事件
@@ -281,7 +283,6 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     protected void onDestroy()
     {
         super.onDestroy();
-        CityManager.saveCities();
         settings.put("change_city", false);
     }
 
@@ -662,11 +663,6 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         builder.setTitle("请选择主题色");
         final String[] sex = {"炫酷黑", "姨妈红", "哔哩粉", "亮骚紫", "基佬紫", "深邃蓝", "知乎蓝", "草原绿", "亮瞎橙", "绅士棕", "阴天灰"};
         //    设置一个单项选择下拉框
-        /**
-         * 第一个参数指定我们要显示的一组下拉单选框的数据集合
-         * 第二个参数代表索引，指定默认哪一个单选框被勾选上，1表示默认'女' 会被勾选上
-         * 第三个参数给每一个单选项绑定一个监听器
-         */
         builder.setSingleChoiceItems(sex, -1, new DialogInterface.OnClickListener()
         {
             @Override
@@ -784,6 +780,54 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                     }
                 });
 
+            }
+        });
+    }
+
+    private void checkUpdate()
+    {
+        HttpUtil.sendOkHttpRequest("http://www.sailflorve.com/elvaweather/update/latest_version.txt", new Callback()
+        {
+            @Override
+            public void onFailure(Call call, IOException e)
+            {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException
+            {
+                final String newVersion = response.body().string();
+                runOnUiThread(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        int result = Utility.compareVersion(CURRENT_VERSION, newVersion);
+                        if (result == -1)
+                        {
+                            new AlertDialog.Builder(WeatherActivity.this).setTitle("版本升级")
+                                    .setMessage("发现新版本，是否升级？")
+                                    .setPositiveButton("升级", new DialogInterface.OnClickListener()
+                                    {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which)
+                                        {
+                                            Uri uri = Uri.parse("http://www.sailflorve.com/elvaweather/update/sailweather.apk");
+                                            Intent it = new Intent(Intent.ACTION_VIEW, uri);
+                                            startActivity(it);
+                                        }
+                                    }).setNegativeButton("不升级", new DialogInterface.OnClickListener()
+                            {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which)
+                                {
+
+                                }
+                            }).show();//在按键响应事件中显示此对话框
+                        }
+                    }
+                });
             }
         });
     }

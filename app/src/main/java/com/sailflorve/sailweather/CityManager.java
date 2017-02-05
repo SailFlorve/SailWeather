@@ -17,19 +17,20 @@ public class CityManager
 
     static
     {
-        cityList = new ArrayList<>();
         settings = new Settings(MyApplication.getContext());
-        cities = (String) settings.get("saved_cities", null);
     }
 
     public static void loadCities()
     {
+        cityList = new ArrayList<>();
+        cities = (String) settings.get("saved_cities", null);
+
         if (cities != null)
         {
             String[] cityArray = cities.split(",");
             for (String city : cityArray)
             {
-                cityList.add(city);
+                addCity(city);
             }
         }
     }
@@ -50,12 +51,14 @@ public class CityManager
         if (!cityList.contains(cityName))
         {
             cityList.add(cityName);
+            saveCities();
         }
     }
 
     public static void deleteCity(String cityName)
     {
         cityList.remove(cityName);
+        saveCities();
     }
 
     public static List<String> getCityList()
