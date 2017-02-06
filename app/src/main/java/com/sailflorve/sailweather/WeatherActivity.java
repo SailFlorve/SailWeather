@@ -93,7 +93,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     private Settings settings;
     private LocationClient client;
 
-    private final String CURRENT_VERSION = "1.5.5";
+    private final String CURRENT_VERSION = "1.5.9";
 
     private Boolean showBingPic;
 
