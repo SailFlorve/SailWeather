@@ -3,11 +3,13 @@ package com.sailflorve.sailweather;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Looper;
 import android.preference.PreferenceManager;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -32,6 +34,8 @@ import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.drawable.GlideDrawable;
+import com.bumptech.glide.request.target.ImageViewTarget;
 import com.bumptech.glide.util.Util;
 import com.sailflorve.sailweather.gson.CityInfo;
 import com.sailflorve.sailweather.gson.Forecast;
@@ -157,7 +161,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         navButton.setOnClickListener(this);
         menuButton.setOnClickListener(this);
 
-        checkUpdate();
+        checkUpdate("load");
         initViewLists();
         initWeather();
         //设置下拉刷新事件
@@ -331,8 +335,8 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         //如果没有网络 使用默认背景图
         if (settings.get("bing_pic", null) == null || !Utility.isNetworkAvailable(WeatherActivity.this))
         {
-            Glide.with(WeatherActivity.this).load(R.drawable.bg).into(bingPicImg);
-            Glide.with(WeatherActivity.this).load(R.drawable.weather_pic).into(appImage);
+            Glide.with(WeatherActivity.this).load(R.drawable.bg).crossFade(500).into(bingPicImg);
+            Glide.with(WeatherActivity.this).load(R.drawable.weather_pic).crossFade(500).into(appImage);
         }
 
         showBingPic = (Boolean) settings.get("show_bing_pic", true);
@@ -437,12 +441,20 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                 dialog.dismiss();
             }
         });
+        builder.setNeutralButton("检查更新", new DialogInterface.OnClickListener()
+        {
+            @Override
+            public void onClick(DialogInterface dialog, int which)
+            {
+                checkUpdate("button");
+            }
+        });
         AlertDialog dialog = builder.create();
         dialog.show();
 
         developerInfo = (TextView) dialog.findViewById(R.id.developer_info);
         updateInfo = (TextView) dialog.findViewById(R.id.update_info);
-        developerInfo.setText("Sail天气是一款界面美观、功能齐全、简单易用的天气软件。\n开发者：SailFlorve");
+        developerInfo.setText("Sail天气 Ver "+CURRENT_VERSION+"\n@SailFlorve");
         updateInfo.setText("正在加载...");
         HttpUtil.sendOkHttpRequest("http://www.sailflorve.com/elvaweather/update/update.txt", new Callback()
         {
@@ -454,7 +466,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                     @Override
                     public void run()
                     {
-                        updateInfo.setText("网络连接错误，请在联网后重试。");
+                        updateInfo.setText("获取更新日志发生错误。");
                     }
                 });
 
@@ -491,7 +503,6 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         {
             loadWeather(weatherId);
         }
-        swipeRefresh.setRefreshing(false);
     }
 
     private void loadWeather(final String weatherId)
@@ -535,7 +546,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                         {
                             Toast.makeText(WeatherActivity.this, "获取天气信息失败，错误代码11", Toast.LENGTH_SHORT).show();
                         }
-
+                        swipeRefresh.setRefreshing(false);
                     }
                 });
             }
@@ -554,7 +565,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     private void showNowInfo(Weather weather)
     {
         String cityName = weather.basic.cityName;
-        String updateTime = "更新时间" + weather.basic.update.updateTime.split(" ")[1];
+        String updateTime = "更新时间 " + weather.basic.update.updateTime.split(" ")[1];
         String degree = weather.now.temperature;
         String weatherInfo = weather.now.more.info;
         String weatherCode = weather.now.more.code;
@@ -565,7 +576,10 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         titleUpdateTime.setText(updateTime);
         degreeText.setText(degree);
         weatherInfoText.setText(weatherInfo);
-        windInfo.setText(windDirection + " " + windPower + " 级");
+        StringBuilder windInfoText = new StringBuilder();
+        windInfoText.append(windDirection + " " + windPower);
+        if (!windPower.equals("微风")) windInfoText.append(" 级");
+        windInfo.setText(windInfoText.toString());
 
         loadWeatherIcon(this.getResources().getIdentifier("icon" + weatherCode, "drawable", this.getPackageName()), weatherPic);
     }
@@ -581,7 +595,8 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             ImageView weatherIcon = (ImageView) view.findViewById(R.id.weather_icon);
             TextView maxText = (TextView) view.findViewById(R.id.max_text);
             TextView minText = (TextView) view.findViewById(R.id.min_text);
-            dateText.setText(forecast.date);
+            String[] ymd = forecast.date.split("-");
+            dateText.setText(ymd[1] + "月" + ymd[2] + "日");
             infoText.setText(forecast.more.info);
             loadWeatherIcon(this.getResources().getIdentifier("icon" + forecast.more.code, "drawable", this.getPackageName()), weatherIcon);
             maxText.setText("高温 " + forecast.temperature.max + " ℃");
@@ -630,8 +645,14 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             public void onFailure(Call call, IOException e)
             {
                 e.printStackTrace();
-                Looper.prepare();
-                Toast.makeText(WeatherActivity.this, "加载背景图片失败。", Toast.LENGTH_SHORT).show();
+                runOnUiThread(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        Toast.makeText(WeatherActivity.this, "获取背景图片失败", Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
 
             @Override
@@ -646,9 +667,8 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                     @Override
                     public void run()
                     {
-                        Glide.with(WeatherActivity.this).load(bingPic).into(bingPicImg);
-                        Glide.with(WeatherActivity.this).load(bingPic).into(appImage);
-
+                        Glide.with(WeatherActivity.this).load(bingPic).error(R.drawable.bg).crossFade(500).into(bingPicImg);
+                        Glide.with(WeatherActivity.this).load(bingPic).error(R.drawable.weather_pic).crossFade(500).into(appImage);
                     }
                 });
             }
@@ -763,8 +783,10 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                     public void run()
                     {
                         Toast.makeText(WeatherActivity.this, "获取城市信息失败，错误代码12", Toast.LENGTH_SHORT).show();
+                        swipeRefresh.setRefreshing(false);
                     }
                 });
+
             }
 
             @Override
@@ -784,16 +806,16 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                         else
                         {
                             Toast.makeText(WeatherActivity.this, "获取城市信息失败，错误代码13", Toast.LENGTH_SHORT).show();
+                            swipeRefresh.setRefreshing(false);
                         }
                     }
                 });
-
             }
         });
-        swipeRefresh.setRefreshing(false);
+
     }
 
-    private void checkUpdate()
+    private void checkUpdate(final String type)
     {
         HttpUtil.sendOkHttpRequest("http://www.sailflorve.com/elvaweather/update/latest_version.txt", new Callback()
         {
@@ -834,6 +856,13 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
 
                                 }
                             }).show();//在按键响应事件中显示此对话框
+                        }
+                        else
+                        {
+                            if(type.equals("button"))
+                            {
+                                Toast.makeText(WeatherActivity.this, "当前为最新版本", Toast.LENGTH_SHORT).show();
+                            }
                         }
                     }
                 });
