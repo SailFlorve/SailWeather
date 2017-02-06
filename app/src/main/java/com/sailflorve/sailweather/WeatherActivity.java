@@ -454,7 +454,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
 
         developerInfo = (TextView) dialog.findViewById(R.id.developer_info);
         updateInfo = (TextView) dialog.findViewById(R.id.update_info);
-        developerInfo.setText("Sail天气 Ver "+CURRENT_VERSION+"\n@SailFlorve");
+        developerInfo.setText("Sail天气 Ver " + CURRENT_VERSION + "\n@SailFlorve");
         updateInfo.setText("正在加载...");
         HttpUtil.sendOkHttpRequest("http://www.sailflorve.com/elvaweather/update/update.txt", new Callback()
         {
@@ -838,7 +838,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                         if (result == -1)
                         {
                             new AlertDialog.Builder(WeatherActivity.this).setTitle("版本升级")
-                                    .setMessage("发现新版本，是否升级？")
+                                    .setMessage("当前版本：" + CURRENT_VERSION + "\n发现新版本：" + newVersion + "\n是否升级？")
                                     .setPositiveButton("升级", new DialogInterface.OnClickListener()
                                     {
                                         @Override
@@ -859,7 +859,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                         }
                         else
                         {
-                            if(type.equals("button"))
+                            if (type.equals("button"))
                             {
                                 Toast.makeText(WeatherActivity.this, "当前为最新版本", Toast.LENGTH_SHORT).show();
                             }
@@ -884,6 +884,8 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             else
             {
                 Toast.makeText(WeatherActivity.this, "定位失败，错误代码14", Toast.LENGTH_SHORT).show();
+                swipeRefresh.setRefreshing(false);
+                return;
             }
 
             String sendName = district;
