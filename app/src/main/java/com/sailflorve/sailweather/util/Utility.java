@@ -6,15 +6,19 @@ import android.net.NetworkInfo;
 import android.text.TextUtils;
 
 import com.google.gson.Gson;
+import com.sailflorve.sailweather.MyApplication;
 import com.sailflorve.sailweather.db.City;
 import com.sailflorve.sailweather.db.County;
 import com.sailflorve.sailweather.db.Province;
-import com.sailflorve.sailweather.gson.CityInfo;
 import com.sailflorve.sailweather.gson.Weather;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class Utility
 {
@@ -113,22 +117,6 @@ public class Utility
         return null;
     }
 
-    public static CityInfo handleCityInfoResponse(String response)
-    {
-        try
-        {
-            JSONObject jsonObject = new JSONObject(response);
-            JSONArray jsonArray = jsonObject.getJSONArray("HeWeather5");
-            String cityContent = jsonArray.getJSONObject(0).toString();
-            return new Gson().fromJson(cityContent, CityInfo.class);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
     //返回网络是否畅通
     public static boolean isNetworkAvailable(Context context)
     {
@@ -194,4 +182,20 @@ public class Utility
         }
     }
 
+    public static boolean isNewDay()
+    {
+        Settings settings = new Settings(MyApplication.getContext());
+        String oldDay = (String) settings.get("day", "0");
+
+        SimpleDateFormat formatter = new SimpleDateFormat("dd", Locale.CHINA);
+        Date curDate = new Date(System.currentTimeMillis());//获取当前时间
+        String newDay = formatter.format(curDate);
+
+        if(oldDay.equals(newDay)) return false;
+        else
+        {
+            settings.put("day", newDay);
+            return true;
+        }
+    }
 }

@@ -4,14 +4,14 @@
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorPrimaryDark">@color/colorPrimary</item>
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
     <style name="RedTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">#f44336</item>
-        <item name="colorPrimaryDark">#d32f2f</item>
+        <item name="colorPrimaryDark">#9e2323</item>
         <item name="colorAccent">#ff5252</item>
     </style>
 
@@ -55,13 +55,6 @@
         <item name="colorPrimary">#4caf50</item>
         <item name="colorPrimaryDark">#388e3c</item>
         <item name="colorAccent">#69f0ae</item>
-    </style>
-
-    <style name="OrangeTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <!-- Customize your theme here. -->
-        <item name="colorPrimary">#ff9800</item>
-        <item name="colorPrimaryDark">#f57c00</item>
-        <item name="colorAccent">#ffab40</item>
     </style>
 
     <style name="BrownTheme" parent="Theme.AppCompat.Light.NoActionBar">

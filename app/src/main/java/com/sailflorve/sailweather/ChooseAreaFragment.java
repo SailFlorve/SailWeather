@@ -89,15 +89,14 @@ public class ChooseAreaFragment extends Fragment
                 }
                 else if (currentLevel == LEVEL_COUNTY)
                 {
-                    String weatherId = countyList.get(position).getWeatherId();
-                    CityManager.addCity(countyList.get(position).getCountyName());
+                    String cityName = countyList.get(position).getCountyName();
+                    CityManager.addCity(cityName);
 
                     Intent intent = new Intent(getActivity(), WeatherActivity.class);
-                    intent.putExtra("weather_id", weatherId);
+                    intent.putExtra("city_name", cityName);
                     settings.put("auto_loc", false);
                     startActivity(intent);
                     getActivity().finish();
-
                 }
             }
         });
@@ -200,7 +199,7 @@ public class ChooseAreaFragment extends Fragment
     private void queryFromServer(String address, final String type)
     {
         showProgressDialog();
-        HttpUtil.sendOkHttpRequest(address, new Callback()
+        HttpUtil.sendHttpRequest(address, new Callback()
         {
             @Override
             public void onFailure(Call call, IOException e)
