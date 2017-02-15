@@ -40,7 +40,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="#fff"
-            android:text="关于"/>
+            android:text="关于"
+            android:textColor="?attr/colorPrimary"/>
 
         <Button
             android:id="@+id/exit_button"
@@ -48,7 +49,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="#fff"
-            android:text="退出"/>
+            android:text="退出"
+            android:textColor="?attr/colorPrimary"/>
     </LinearLayout>
 
 

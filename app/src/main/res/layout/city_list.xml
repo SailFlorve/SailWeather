@@ -31,8 +31,9 @@
             android:layout_height="30dp"
             android:layout_gravity="center_vertical"
             android:background="#fff"
+            android:paddingTop="2dp"
             style="?android:attr/borderlessButtonStyle"
-            android:textColor="?attr/colorPrimary"
+            android:textColor="?attr/colorPrimaryDark"
             android:text="添加城市"/>
     </LinearLayout>
 

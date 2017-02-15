@@ -3,7 +3,7 @@ package com.sailflorve.sailweather.gson;
 
 import com.google.gson.annotations.SerializedName;
 
-public class Forecast
+public class DailyForecast
 {
     public String date;
 

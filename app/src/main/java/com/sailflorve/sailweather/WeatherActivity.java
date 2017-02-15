@@ -4,8 +4,6 @@ import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
@@ -16,8 +14,9 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.os.Bundle;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.PopupMenu;
-import android.view.Gravity;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -37,13 +36,14 @@ import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.util.Util;
-import com.sailflorve.sailweather.gson.Forecast;
+import com.sailflorve.sailweather.gson.BingImages;
+import com.sailflorve.sailweather.gson.DailyForecast;
+import com.sailflorve.sailweather.gson.HourlyForecast;
 import com.sailflorve.sailweather.gson.Weather;
 import com.sailflorve.sailweather.util.HttpUtil;
 import com.sailflorve.sailweather.util.Settings;
 import com.sailflorve.sailweather.util.Utility;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,6 +66,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     private TextView degreeText;
     private TextView weatherInfoText;
     private LinearLayout forecastLayout;
+    private LinearLayout hourlyForecastLayout;
     private TextView aqiText;
     private TextView pm25Text;
     private TextView qualityText;
@@ -73,6 +74,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     private TextView sportText;
     private TextView fluText;
     private TextView travelText;
+    private TextView bingPicInfo;
     private TextView dressText;
     private TextView uvText;
     private ImageView bingPicImg;
@@ -81,9 +83,10 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     private TextView windInfo;
     public SwipeRefreshLayout swipeRefresh;
     private ImageView fab;
-    private LinearLayout aqiLayout;
+    private CardView hourlyForecastCardView;
+    private CardView aqiLayout;
+    private CardView suggestionLayout;
     private ImageView appImage;
-    private TextView bottomText;
     private ListView savedCitiesListView;
     private ListView themeListView;
 
@@ -93,7 +96,8 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     private Settings settings;
     private LocationClient client;
 
-    private final String CURRENT_VERSION = "1.6.1";
+    private final String CURRENT_VERSION = "1.7.0";
+    private final String appInfo = "By SailFlorve Ver " + CURRENT_VERSION;
 
     final int[] themesId = {R.style.AppTheme, R.style.RedTheme, R.style.PinkTheme,
             R.style.PurpleTheme, R.style.DeepPurpleTheme, R.style.IndigoTheme,
@@ -138,6 +142,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         degreeText = (TextView) findViewById(R.id.degree_text);
         weatherInfoText = (TextView) findViewById(R.id.weather_info_text);
         forecastLayout = (LinearLayout) findViewById(R.id.forecast_layout);
+        hourlyForecastLayout = (LinearLayout) findViewById(R.id.hourly_forecast_layout);
         aqiText = (TextView) findViewById(R.id.aqi_text);
         pm25Text = (TextView) findViewById(R.id.pm25_text);
         qualityText = (TextView) findViewById(R.id.qlty_text);
@@ -147,20 +152,22 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         uvText = (TextView) findViewById(R.id.uv_text);
         fluText = (TextView) findViewById(R.id.flu_text);
         dressText = (TextView) findViewById(R.id.dress_text);
-        bottomText = (TextView) findViewById(R.id.bottom_text);
         weatherPic = (ImageView) findViewById(R.id.weather_pic);
+        bingPicInfo = (TextView) findViewById(R.id.bing_pic_info);
         appImage = (ImageView) findViewById(R.id.elva_image);
         windInfo = (TextView) findViewById(R.id.wind_info_text);
         appNameText = (TextView) findViewById(R.id.app_name_text);
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         navButton = (Button) findViewById(R.id.nav_button);
+        suggestionLayout = (CardView) findViewById(R.id.suggestion_layout);
         addCityButton = (Button) findViewById(R.id.add_city);
         aboutButton = (Button) findViewById(R.id.about_button);
         exitButton = (Button) findViewById(R.id.exit_button);
         fab = (ImageView) findViewById(R.id.float_button);
         menuButton = (Button) findViewById(R.id.menu_button);
         swipeRefresh = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh);
-        aqiLayout = (LinearLayout) findViewById(R.id.aqi_layout);
+        aqiLayout = (CardView) findViewById(R.id.aqi_layout);
+        hourlyForecastCardView = (CardView) findViewById(R.id.hourly_forecast_card_view);
         savedCitiesListView = (ListView) findViewById(R.id.city_listview);
         themeListView = (ListView) findViewById(R.id.theme_settings_listview);
         swipeRefresh.setColorSchemeResources(R.color.colorPrimary);
@@ -174,7 +181,6 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         menuButton.setOnClickListener(this);
 
         appNameText.setText("Sail天气");
-        bottomText.setText("By SailFlorve  Ver " + CURRENT_VERSION);
 
         checkUpdate("load");
         initViewLists();
@@ -373,9 +379,10 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     {
         drawerLayout.closeDrawer(GravityCompat.START);
         adapter2.notifyDataSetChanged();
+        bingPicInfo.setText(appInfo);
 
-        //如果没有网络 使用默认背景图
-        if (settings.get("bing_pic", null) == null || !Utility.isNetworkAvailable(WeatherActivity.this))
+        //如果没有网络且没有缓存， 使用默认背景图
+        if (settings.get("bing_pic_json", null) == null && !Utility.isNetworkAvailable(WeatherActivity.this))
         {
             if ((boolean) settings.get("use_bing_pic", true))
             {
@@ -606,7 +613,11 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     //处理和展示Weather中的数据
     private void showWeatherInfo(Weather weather)
     {
+        aqiLayout.setVisibility(View.VISIBLE);
+        suggestionLayout.setVisibility(View.VISIBLE);
+        hourlyForecastLayout.setVisibility(View.VISIBLE);
         showNowInfo(weather);
+        showHourlyForecastInfo(weather);
         showForecastInfo(weather);
         showAqiInfo(weather);
         showSuggestInfo(weather);
@@ -634,10 +645,41 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         loadWeatherIcon(this.getResources().getIdentifier("icon" + weatherCode, "drawable", this.getPackageName()), weatherPic);
     }
 
+    private void showHourlyForecastInfo(Weather weather)
+    {
+        if (weather.hourlyForecastList.size() == 0)
+        {
+            hourlyForecastCardView.setVisibility(View.GONE);
+            return;
+        }
+
+        hourlyForecastLayout.removeAllViews();
+        for (HourlyForecast forecast : weather.hourlyForecastList)
+        {
+            View view = LayoutInflater.from(this).inflate(R.layout.hourly_forecast_item, hourlyForecastLayout, false);
+            TextView dateText = (TextView) view.findViewById(R.id.hourly_date_text);
+            TextView infoText = (TextView) view.findViewById(R.id.hourly_weather_text);
+            ImageView weatherIcon = (ImageView) view.findViewById(R.id.hourly_weather_icon);
+            TextView tmpText = (TextView) view.findViewById(R.id.hourly_tmp_text);
+            TextView windText = (TextView) view.findViewById(R.id.hourly_wind_info);
+            String[] time = forecast.date.split(" ");
+            dateText.setText(time[1]);
+            infoText.setText(forecast.more.info);
+            loadWeatherIcon(this.getResources().getIdentifier("icon" + forecast.more.code, "drawable", this.getPackageName()), weatherIcon);
+            tmpText.setText(forecast.temperature + " ℃");
+
+            StringBuilder windInfoText = new StringBuilder();
+            windInfoText.append(forecast.wind.direction + " " + forecast.wind.level);
+            if (!forecast.wind.level.equals("微风")) windInfoText.append(" 级");
+            windText.setText(windInfoText.toString());
+            hourlyForecastLayout.addView(view);
+        }
+    }
+
     private void showForecastInfo(Weather weather)
     {
         forecastLayout.removeAllViews();
-        for (Forecast forecast : weather.forecastList)
+        for (DailyForecast forecast : weather.forecastList)
         {
             View view = LayoutInflater.from(this).inflate(R.layout.forecast_item, forecastLayout, false);
             TextView dateText = (TextView) view.findViewById(R.id.date_text);
@@ -649,8 +691,8 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             dateText.setText(ymd[1] + "月" + ymd[2] + "日");
             infoText.setText(forecast.more.info);
             loadWeatherIcon(this.getResources().getIdentifier("icon" + forecast.more.code, "drawable", this.getPackageName()), weatherIcon);
-            maxText.setText("高温 " + forecast.temperature.max + " ℃");
-            minText.setText("低温 " + forecast.temperature.min + " ℃");
+            maxText.setText(forecast.temperature.max + " ℃");
+            minText.setText(forecast.temperature.min + " ~ ");
             forecastLayout.addView(view);
         }
     }
@@ -659,7 +701,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     {
         if (weather.aqi != null)
         {
-            qualityText.setText("空气质量状况: " + weather.aqi.city.qlty);
+            qualityText.setText(Html.fromHtml("空气质量状况<font><small>：" + weather.aqi.city.qlty + "</small></font>"));
             aqiText.setText(weather.aqi.city.aqi);
             pm25Text.setText(weather.aqi.city.pm25);
         }
@@ -671,39 +713,50 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
 
     private void showSuggestInfo(Weather weather)
     {
-        String comfort = "舒适度: " + weather.suggestion.comfort.level + "\n" + weather.suggestion.comfort.info;
-        String sport = "运动建议: " + weather.suggestion.sport.level + "\n" + weather.suggestion.sport.info;
-        String flu = "感冒指数: " + weather.suggestion.flu.level + "\n" + weather.suggestion.flu.info;
-        String travel = "旅游指数: " + weather.suggestion.travel.level + "\n" + weather.suggestion.travel.info;
-        String dress = "穿衣指数: " + weather.suggestion.dress.level + "\n" + weather.suggestion.dress.info;
-        String UV = "紫外线指数: " + weather.suggestion.uv.level + "\n" + weather.suggestion.uv.info;
+        if (weather.suggestion == null)
+        {
+            suggestionLayout.setVisibility(View.GONE);
+            return;
+        }
+        String comfort = "舒适度：" + "<font><big>" + weather.suggestion.comfort.level + "</big></font><br><br>" + weather.suggestion.comfort.info;
+        String sport = "运动建议：" + "<font><big>" + weather.suggestion.sport.level + "</big></font><br><br>" + weather.suggestion.sport.info;
+        String flu = "感冒指数：" + "<font><big>" + weather.suggestion.flu.level + "</big></font><br><br>" + weather.suggestion.flu.info;
+        String travel = "旅游指数：" + "<font><big>" + weather.suggestion.travel.level + "</big></font><br><br>" + weather.suggestion.travel.info;
+        String dress = "穿衣指数：" + "<font><big>" + weather.suggestion.dress.level + "</big></font><br><br>" + weather.suggestion.dress.info;
+        String UV = "紫外线指数：" + "<font><big>" + weather.suggestion.uv.level + "</big></font><br><br>" + weather.suggestion.uv.info;
 
-        comfortText.setText(comfort);
-        sportText.setText(sport);
-        fluText.setText(flu);
-        travelText.setText(travel);
-        uvText.setText(UV);
-        dressText.setText(dress);
+        comfortText.setText(Html.fromHtml(comfort));
+        sportText.setText(Html.fromHtml(sport));
+        fluText.setText(Html.fromHtml(flu));
+        travelText.setText(Html.fromHtml(travel));
+        uvText.setText(Html.fromHtml(UV));
+        dressText.setText(Html.fromHtml(dress));
     }
 
     private void loadBingPic()
     {
-        String oldBingPic = (String) settings.get("bing_pic", null);
+        String oldBingPic = (String) settings.get("bing_pic_json", null);
         if (oldBingPic != null && !Utility.isNewDay())
         {
-            Glide.with(WeatherActivity.this).load(oldBingPic).error(R.drawable.bg).into(bingPicImg);
+            final BingImages images = Utility.handleBingResponse(oldBingPic);
+            final String imageUrl = "http://s.cn.bing.net" + images.url;
+            Glide.with(WeatherActivity.this).load(imageUrl).error(R.drawable.bg).into(bingPicImg);
             if (!(boolean) settings.get("use_bing_pic", true))
             {
                 Glide.with(WeatherActivity.this).load(Uri.parse((String) settings.get("uri_string", null))).error(R.drawable.weather_pic).into(appImage);
+                bingPicInfo.setText(appInfo);
             }
             else
             {
-                Glide.with(WeatherActivity.this).load(oldBingPic).error(R.drawable.weather_pic).crossFade(500).into(appImage);
+                Glide.with(WeatherActivity.this).load(imageUrl).error(R.drawable.weather_pic).crossFade(500).into(appImage);
+                bingPicInfo.setText(images.copyright);
             }
             return;
         }
 
-        String requestBingPic = "http://guolin.tech/api/bing_pic";
+        //String requestBingPic = "http://guolin.tech/api/bing_pic";
+        String requestBingPic = "http://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1";
+
         HttpUtil.sendHttpRequest(requestBingPic, new Callback()
         {
             @Override
@@ -724,20 +777,24 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             public void onResponse(Call call, Response response) throws IOException
             {
                 final String bingPic = response.body().string();
-                settings.put("bing_pic", bingPic);
+                final BingImages images = Utility.handleBingResponse(bingPic);
+                final String imageUrl = "http://s.cn.bing.net" + images.url;
+                settings.put("bing_pic_json", bingPic);
                 runOnUiThread(new Runnable()
                 {
                     @Override
                     public void run()
                     {
-                        Glide.with(WeatherActivity.this).load(bingPic).error(R.drawable.bg).crossFade(500).into(bingPicImg);
+                        Glide.with(WeatherActivity.this).load(imageUrl).error(R.drawable.bg).crossFade(500).into(bingPicImg);
                         if (!(boolean) settings.get("use_bing_pic", true))
                         {
                             Glide.with(WeatherActivity.this).load(Uri.parse((String) settings.get("uri_string", null))).error(R.drawable.weather_pic).into(appImage);
+                            bingPicInfo.setText(appInfo);
                         }
                         else
                         {
-                            Glide.with(WeatherActivity.this).load(bingPic).error(R.drawable.weather_pic).crossFade(500).into(appImage);
+                            Glide.with(WeatherActivity.this).load(imageUrl).error(R.drawable.weather_pic).crossFade(500).into(appImage);
+                            bingPicInfo.setText(images.copyright);
                         }
                     }
                 });
@@ -872,6 +929,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                     settings.put("uri_string", uri.toString());
                     //Bitmap bit = BitmapFactory.decodeStream(getContentResolver().openInputStream(uri));
                     Glide.with(WeatherActivity.this).load(uri).into(appImage);
+                    bingPicInfo.setText(appInfo);
                     settings.put("use_bing_pic", false);
                 }
                 catch (Exception e)

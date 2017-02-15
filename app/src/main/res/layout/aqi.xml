@@ -2,17 +2,17 @@
 <android.support.v7.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/aqi_layout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:elevation="5dp"
-    app:cardCornerRadius="4dp"
     android:layout_margin="15dp"
-    app:cardBackgroundColor="#a0000000"
+    android:clickable="true"
+    android:elevation="5dp"
     android:foreground="?android:attr/selectableItemBackground"
-    android:clickable="true">
+    app:cardBackgroundColor="#a0000000"
+    app:cardCornerRadius="4dp">
 
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                  android:id="@+id/aqi_layout"
                   android:layout_width="match_parent"
                   android:layout_height="wrap_content"
                   android:orientation="vertical">

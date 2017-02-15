@@ -10,6 +10,7 @@ import com.sailflorve.sailweather.MyApplication;
 import com.sailflorve.sailweather.db.City;
 import com.sailflorve.sailweather.db.County;
 import com.sailflorve.sailweather.db.Province;
+import com.sailflorve.sailweather.gson.BingImages;
 import com.sailflorve.sailweather.gson.Weather;
 
 import org.json.JSONArray;
@@ -107,8 +108,24 @@ public class Utility
         {
             JSONObject jsonObject = new JSONObject(response);
             JSONArray jsonArray = jsonObject.getJSONArray("HeWeather");
-            String weatherContent = jsonArray.getJSONObject(0).toString();
+            String weatherContent = jsonArray.getJSONObject(jsonArray.length() - 1).toString();
             return new Gson().fromJson(weatherContent, Weather.class);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static BingImages handleBingResponse(String response)
+    {
+        try
+        {
+            JSONObject jsonObject = new JSONObject(response);
+            JSONArray jsonArray = jsonObject.getJSONArray("images");
+            String weatherContent = jsonArray.getJSONObject(0).toString();
+            return new Gson().fromJson(weatherContent, BingImages.class);
         }
         catch (Exception e)
         {
@@ -191,7 +208,7 @@ public class Utility
         Date curDate = new Date(System.currentTimeMillis());//获取当前时间
         String newDay = formatter.format(curDate);
 
-        if(oldDay.equals(newDay)) return false;
+        if (oldDay.equals(newDay)) return false;
         else
         {
             settings.put("day", newDay);
