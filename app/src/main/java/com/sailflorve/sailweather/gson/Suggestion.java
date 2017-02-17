@@ -3,8 +3,7 @@ package com.sailflorve.sailweather.gson;
 
 import com.google.gson.annotations.SerializedName;
 
-public class Suggestion
-{
+public class Suggestion {
     @SerializedName("comf")
     public Comfort comfort;
 
@@ -25,8 +24,7 @@ public class Suggestion
     @SerializedName("uv")
     public UV uv;
 
-    public class Comfort
-    {
+    public class Comfort {
         @SerializedName("brf")
         public String level;
 
@@ -34,8 +32,7 @@ public class Suggestion
         public String info;
     }
 
-    public class CarWash
-    {
+    public class CarWash {
         @SerializedName("brf")
         public String level;
 
@@ -43,8 +40,7 @@ public class Suggestion
         public String info;
     }
 
-    public class Sport
-    {
+    public class Sport {
         @SerializedName("brf")
         public String level;
 
@@ -52,8 +48,7 @@ public class Suggestion
         public String info;
     }
 
-    public class Dress
-    {
+    public class Dress {
         @SerializedName("brf")
         public String level;
 
@@ -61,8 +56,7 @@ public class Suggestion
         public String info;
     }
 
-    public class Flu
-    {
+    public class Flu {
         @SerializedName("brf")
         public String level;
 
@@ -70,8 +64,7 @@ public class Suggestion
         public String info;
     }
 
-    public class Travel
-    {
+    public class Travel {
         @SerializedName("brf")
         public String level;
 
@@ -79,8 +72,7 @@ public class Suggestion
         public String info;
     }
 
-    public class UV
-    {
+    public class UV {
         @SerializedName("brf")
         public String level;
 

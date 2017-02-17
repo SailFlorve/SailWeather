@@ -2,8 +2,7 @@ package com.sailflorve.sailweather.gson;
 
 import com.google.gson.annotations.SerializedName;
 
-public class HourlyForecast
-{
+public class HourlyForecast {
     @SerializedName("tmp")
     public String temperature;
 
@@ -14,16 +13,14 @@ public class HourlyForecast
 
     public String date;
 
-    public class More
-    {
+    public class More {
         @SerializedName("txt")
         public String info;
 
         public String code;
     }
 
-    public class Wind
-    {
+    public class Wind {
         @SerializedName("dir")
         public String direction;
 
