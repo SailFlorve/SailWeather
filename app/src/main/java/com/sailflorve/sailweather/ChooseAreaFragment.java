@@ -5,12 +5,14 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -18,6 +20,7 @@ import android.widget.Toast;
 import com.sailflorve.sailweather.db.City;
 import com.sailflorve.sailweather.db.County;
 import com.sailflorve.sailweather.db.Province;
+import com.sailflorve.sailweather.gson.Weather;
 import com.sailflorve.sailweather.util.HttpUtil;
 import com.sailflorve.sailweather.util.Settings;
 import com.sailflorve.sailweather.util.Utility;
@@ -39,6 +42,8 @@ public class ChooseAreaFragment extends Fragment {
     private ProgressDialog progressDialog;
     private TextView titleText;
     private Button backButton;
+    private EditText editText;
+    private Button okCityButton;
     private ListView listView;
     private ArrayAdapter<String> adapter;
     private List<String> dataList = new ArrayList<>();
@@ -60,6 +65,8 @@ public class ChooseAreaFragment extends Fragment {
         titleText = (TextView) view.findViewById(R.id.title_text);
         backButton = (Button) view.findViewById(R.id.back_button);
         listView = (ListView) view.findViewById(R.id.list_view);
+        editText = (EditText) view.findViewById(R.id.edit_text);
+        okCityButton = (Button) view.findViewById(R.id.ok_city);
         settings = new Settings(getContext());
         adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, dataList);
         listView.setAdapter(adapter);
@@ -99,6 +106,71 @@ public class ChooseAreaFragment extends Fragment {
                 } else if (currentLevel == LEVEL_CITY) {
                     queryProvinces();
                 }
+            }
+        });
+
+        editText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                editText.setFocusable(true);
+                editText.setFocusableInTouchMode(true);
+            }
+        });
+
+        okCityButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final String input = editText.getText().toString();
+                if (TextUtils.isEmpty(input)) {
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(getContext(), "还未输入城市哦", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    return;
+                }
+                showProgressDialog();
+                HttpUtil.sendHttpRequest("https://free-api.heweather.com/v5/search?city=" + input + "&key=d8adf978646b45e2875b82c9fed6d3eb", new Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(getContext(), "服务器连接失败", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        closeProgressDialog();
+                    }
+
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        Weather weather = Utility.handleWeatherResponse(response.body().string());
+                        closeProgressDialog();
+                        if (!weather.status.equals("ok")) {
+                            getActivity().runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(getContext(), "未找到此城市，请重新输入", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        } else {
+                            CityManager.addCity(input);
+                            Intent intent = new Intent(getContext(), WeatherActivity.class);
+                            intent.putExtra("city_name", input);
+                            settings.put("auto_loc", false);
+                            startActivity(intent);
+                            getActivity().finish();
+//                            runOnUiThread(new Runnable() {
+//                                @Override
+//                                public void run() {
+//                                    Toast.makeText(MainActivity.this, "发现此城市！", Toast.LENGTH_SHORT).show();
+//                                }
+//                            });
+                        }
+
+                    }
+                });
             }
         });
 
@@ -205,6 +277,14 @@ public class ChooseAreaFragment extends Fragment {
                             }
                         }
                     });
+                } else {
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            closeProgressDialog();
+                            Toast.makeText(getContext(), "加载列表失败", Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 }
             }
         });
@@ -220,10 +300,8 @@ public class ChooseAreaFragment extends Fragment {
         if (progressDialog == null) {
             progressDialog = new ProgressDialog(getActivity());
             progressDialog.setMessage("正在加载...");
-            progressDialog.setCanceledOnTouchOutside(false);
+            progressDialog.setCanceledOnTouchOutside(true);
         }
         progressDialog.show();
     }
-
-
 }

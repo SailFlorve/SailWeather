@@ -1,26 +1,39 @@
 package com.sailflorve.sailweather;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
+import com.sailflorve.sailweather.gson.Weather;
+import com.sailflorve.sailweather.util.HttpUtil;
 import com.sailflorve.sailweather.util.Settings;
 import com.sailflorve.sailweather.util.Utility;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
 
 public class MainActivity extends BaseActivity {
 
     private Settings settings;
     private Button autoLoc;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,7 +65,20 @@ public class MainActivity extends BaseActivity {
                 settings.put("auto_loc", true);
             }
         });
+            }
 
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            if (MainActivity.this.getCurrentFocus() != null) {
+                if (MainActivity.this.getCurrentFocus().getApplicationWindowToken() != null) {
+                    imm.hideSoftInputFromWindow(MainActivity.this.getCurrentFocus().getWindowToken(),
+                            InputMethodManager.HIDE_NOT_ALWAYS);
+                }
+            }
+        }
+        return super.onTouchEvent(event);
     }
 
     private void requestPermissions() {

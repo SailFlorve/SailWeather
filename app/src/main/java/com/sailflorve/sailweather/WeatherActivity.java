@@ -94,7 +94,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     private Settings settings;
     private LocationClient client;
 
-    private final String CURRENT_VERSION = "1.7.1";
+    private final String CURRENT_VERSION = "1.8.0";
     private final String appInfo = "Sail天气 Ver " + CURRENT_VERSION;
 
     final int[] themesId = {R.style.AppTheme, R.style.RedTheme, R.style.PinkTheme,
@@ -240,9 +240,10 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         appImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String[] items = new String[]{"使用每日一图", "自定义图片"};
+                String[] items = new String[]{"使用 Bing 每日一图", "自定义图片"};
                 AlertDialog dialog = new AlertDialog.Builder(WeatherActivity.this)
                         .setTitle("更改图片")
+                        .setIcon(android.R.drawable.ic_menu_gallery)
                         .setItems(items, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
@@ -612,7 +613,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
 
     private void showAqiInfo(Weather weather) {
         if (weather.aqi != null) {
-            qualityText.setText(Html.fromHtml("空气质量状况<font><small>：" + weather.aqi.city.qlty + "</small></font>"));
+            qualityText.setText(Html.fromHtml("空气质量<font><small>：" + weather.aqi.city.qlty + "</small></font>"));
             aqiText.setText(weather.aqi.city.aqi);
             pm25Text.setText(weather.aqi.city.pm25);
         } else {
