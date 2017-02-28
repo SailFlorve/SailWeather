@@ -94,7 +94,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     private Settings settings;
     private LocationClient client;
 
-    private final String CURRENT_VERSION = "1.8.0";
+    private final String CURRENT_VERSION = "1.8.1";
     private final String appInfo = "Sail天气 Ver " + CURRENT_VERSION;
 
     final int[] themesId = {R.style.AppTheme, R.style.RedTheme, R.style.PinkTheme,
@@ -116,7 +116,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             View decorView = getWindow().getDecorView();
             decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
             getWindow().setStatusBarColor(Color.TRANSPARENT);
-            //选择并设置主题
+            //设置主题相关
             int themeNum = (int) settings.get("current_theme", 0);
             try {
                 setTheme(themesId[themeNum]);
@@ -175,7 +175,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         checkUpdate("load");
         initViewLists();
         initWeather();
-        //设置下拉刷新事件
+
         swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -266,11 +266,9 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            //选择城市按钮点击事件
             case R.id.nav_button:
                 drawerLayout.openDrawer(GravityCompat.START);
                 break;
-            //菜单点击事件
             case R.id.menu_button:
                 showPopupMenu(menuButton);
                 break;
@@ -306,9 +304,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         settings.put("change_city", false);
     }
 
-    //创建菜单
     private void showPopupMenu(View view) {
-        // View当前PopupMenu显示的相对View的位置
         PopupMenu popupMenu = new PopupMenu(this, view);
         // menu布局
         popupMenu.getMenuInflater().inflate(R.menu.title_menu, popupMenu.getMenu());
@@ -370,7 +366,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             }
             showWeatherInfo(weather);
 
-            //如果是申请了切换城市(点击了城市管理那里)，更新城市天气id
+            //如果是申请了切换城市(点击了城市管理)，更新城市天气id
             if ((Boolean) settings.get("change_city", false)) {
                 mCityName = getIntent().getStringExtra("city_name");
                 settings.put("change_city", false);
@@ -409,7 +405,6 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         themeListView.setAdapter(adapter1);
         themeListView.setDividerHeight(0);
 
-        //一旦加载一个城市的天气，就添加列表；程序启动时读取列表；退出时保存列表。
         CityManager.loadCities();
 
         adapter2 = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, CityManager.getCityList());
@@ -699,13 +694,12 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         });
     }
 
-    //加载天气晴雨图标
+    //加载天气图标
     private void loadWeatherIcon(final int resourceId, ImageView imageView) {
         if (Util.isOnMainThread()) {
             Glide.with(getApplicationContext()).load(resourceId).into(imageView);
         }
     }
-
 
     //选择主题对话框
     private void chooseColor() {

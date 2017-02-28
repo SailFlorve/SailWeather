@@ -34,7 +34,6 @@ public class MainActivity extends BaseActivity {
     private Settings settings;
     private Button autoLoc;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

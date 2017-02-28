@@ -155,7 +155,7 @@ public class ChooseAreaFragment extends Fragment {
                                 }
                             });
                         } else {
-                            CityManager.addCity(input);
+                            CityManager.addCity(input.trim());
                             Intent intent = new Intent(getContext(), WeatherActivity.class);
                             intent.putExtra("city_name", input);
                             settings.put("auto_loc", false);

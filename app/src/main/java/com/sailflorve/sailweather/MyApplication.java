@@ -5,6 +5,10 @@ import android.content.Context;
 
 import org.litepal.LitePalApplication;
 
+/**
+ * 此Class方便全局获取Context
+ */
+
 public class MyApplication extends Application {
     private static Context context;
 

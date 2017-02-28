@@ -37,10 +37,10 @@
 
         <EditText
             android:id="@+id/edit_text"
-            android:background="@null"
             android:layout_width="0dp"
-            android:layout_weight="1"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@null"
             android:hint="输入城市..."
             android:minHeight="?android:attr/listPreferredItemHeightSmall"
             android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"
@@ -51,24 +51,17 @@
 
         <Button
             android:id="@+id/ok_city"
-            style="@style/Widget.AppCompat.Button.Borderless"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="#fff"
             android:text="确定" />
 
-        <TextView
-            android:layout_width="1dp"
-            android:layout_height="wrap_content"
-            android:textSize="20sp"
-            android:background="#000"
-            android:layout_gravity="center_vertical"/>
-
         <Button
             android:id="@+id/auto_loc"
-            style="@style/Widget.AppCompat.Button.Borderless"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginLeft="1dp"
+            android:background="#fff"
             android:text="自动定位" />
     </LinearLayout>
 
