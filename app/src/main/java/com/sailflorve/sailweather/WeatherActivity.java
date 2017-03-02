@@ -96,7 +96,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     private Settings settings;
     private LocationClient client;
 
-    private final String CURRENT_VERSION = "1.8.6";
+    private final String CURRENT_VERSION = "1.8.7";
     private final String appInfo = "Sail天气 Ver " + CURRENT_VERSION;
 
     final int[] themesId = {R.style.AppTheme, R.style.RedTheme, R.style.PinkTheme,
