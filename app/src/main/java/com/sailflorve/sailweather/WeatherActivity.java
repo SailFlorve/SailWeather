@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.PopupMenu;
 import android.text.Html;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -36,6 +37,7 @@ import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.util.Util;
+import com.sailflorve.sailweather.db.SavedCity;
 import com.sailflorve.sailweather.gson.BingImages;
 import com.sailflorve.sailweather.gson.DailyForecast;
 import com.sailflorve.sailweather.gson.HourlyForecast;
@@ -94,7 +96,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     private Settings settings;
     private LocationClient client;
 
-    private final String CURRENT_VERSION = "1.8.1";
+    private final String CURRENT_VERSION = "1.8.6";
     private final String appInfo = "Sail天气 Ver " + CURRENT_VERSION;
 
     final int[] themesId = {R.style.AppTheme, R.style.RedTheme, R.style.PinkTheme,
@@ -216,22 +218,21 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 swipeRefresh.setRefreshing(true);
                 drawerLayout.closeDrawer(GravityCompat.START);
-                String cityName = CityManager.getCityList().get(position);
-                if (cityName.contains("自动定位")) {
+                SavedCity city = CityManager.getSavedCityList().get(position);
+                if (city.getName().contains("自动定位")) {
                     settings.put("auto_loc", true);
                     startLocation();
                 } else {
                     settings.put("auto_loc", false);
-                    loadWeather(cityName);
+                    loadWeather(city.getWeatherId());
                 }
-
             }
         });
 
         savedCitiesListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                CityManager.deleteCity(CityManager.getCityList().get(position));
+                CityManager.deleteCity(position);
                 adapter2.notifyDataSetChanged();
                 return true;
             }
@@ -368,7 +369,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
 
             //如果是申请了切换城市(点击了城市管理)，更新城市天气id
             if ((Boolean) settings.get("change_city", false)) {
-                mCityName = getIntent().getStringExtra("city_name");
+                mCityName = getIntent().getStringExtra("city_weather_id");
                 settings.put("change_city", false);
             }
             requestWeather(mCityName);
@@ -387,7 +388,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             uvText.setText("null");
             dressText.setText("null");
 
-            mCityName = getIntent().getStringExtra("city_name");
+            mCityName = getIntent().getStringExtra("city_weather_id");
             requestWeather(mCityName);
         }
     }
@@ -407,11 +408,9 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
 
         CityManager.loadCities();
 
-        adapter2 = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, CityManager.getCityList());
+        adapter2 = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, CityManager.getCityStringList());
         savedCitiesListView.setAdapter(adapter2);
         savedCitiesListView.setDividerHeight(0);
-
-
     }
 
     private void showAboutDialog() {
@@ -469,21 +468,21 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     }
 
     //根据天气id请求天气信息
-    public void requestWeather(final String cityName) {
+    public void requestWeather(final String cityWeatherId) {
         swipeRefresh.setRefreshing(true);
         loadBingPic();
 
-        if (cityName.equals("auto_loc")) {
+        if (cityWeatherId.equals("auto_loc")) {
             startLocation();
         } else {
-            loadWeather(cityName);
+            loadWeather(cityWeatherId);
         }
     }
 
     //根据城市名称，返回城市天气信息。
-    private void loadWeather(final String cityName) {
+    private void loadWeather(final String cityWeatherId) {
         String weatherUrl = "https://free-api.heweather.com/v5/weather?city=" +
-                cityName + "&key=" + weatherKey;
+                cityWeatherId + "&key=" + weatherKey;
         HttpUtil.sendHttpRequest(weatherUrl, new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -507,7 +506,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                         if (weather != null && "ok".equals(weather.status)) {
                             settings.put("weather", responseText);
                             showWeatherInfo(weather);
-                            mCityName = cityName;
+                            mCityName = cityWeatherId;
                         } else {
                             Toast.makeText(WeatherActivity.this, "获取天气信息失败，错误代码11", Toast.LENGTH_SHORT).show();
                         }
@@ -826,6 +825,12 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     public class MyLocationListener implements BDLocationListener {
         @Override
         public void onReceiveLocation(BDLocation bdLocation) {
+            if (bdLocation == null) {
+                swipeRefresh.setRefreshing(false);
+                Toast.makeText(WeatherActivity.this, "无法定位，错误代码15", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             String district = bdLocation.getDistrict();
             final String city = bdLocation.getCity();
             if (city == null) {
@@ -841,7 +846,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             if (sendName.charAt(sendName.length() - 1) == '市') {
                 sendName = sendName.substring(0, sendName.length() - 1);
             }
-            Toast.makeText(WeatherActivity.this, "定位成功，当前城市:" + sendName, Toast.LENGTH_SHORT).show();
+            Toast.makeText(WeatherActivity.this, "定位成功，当前城市：" + sendName, Toast.LENGTH_SHORT).show();
             loadWeather(sendName);
             settings.put("loc_city", sendName);
             client.stop();

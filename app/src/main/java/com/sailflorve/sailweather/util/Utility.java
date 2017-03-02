@@ -18,7 +18,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class Utility {
@@ -90,6 +92,24 @@ public class Utility {
             JSONArray jsonArray = jsonObject.getJSONArray("HeWeather");
             String weatherContent = jsonArray.getJSONObject(jsonArray.length() - 1).toString();
             return new Gson().fromJson(weatherContent, Weather.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    public static List<Weather> handleInputCityResponse(String response) {
+        String weatherJson = response.replace("HeWeather5", "HeWeather");
+        List<Weather> weathers = new ArrayList<>();
+        try {
+            JSONObject jsonObject = new JSONObject(weatherJson);
+            JSONArray jsonArray = jsonObject.getJSONArray("HeWeather");
+            for (int i = 0; i < jsonArray.length(); i++) {
+                String weatherContent = jsonArray.getJSONObject(i).toString();
+                weathers.add(new Gson().fromJson(weatherContent, Weather.class));
+            }
+            return weathers;
         } catch (Exception e) {
             e.printStackTrace();
         }

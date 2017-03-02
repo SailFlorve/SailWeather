@@ -16,6 +16,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.sailflorve.sailweather.db.SavedCity;
 import com.sailflorve.sailweather.gson.Weather;
 import com.sailflorve.sailweather.util.HttpUtil;
 import com.sailflorve.sailweather.util.Settings;
@@ -122,9 +123,12 @@ public class MainActivity extends BaseActivity {
     }
 
     private void useAutoLocation() {
-        CityManager.addCity("自动定位");
+        SavedCity savedCity = new SavedCity();
+        savedCity.setName("自动定位");
+        savedCity.setWeatherId("auto_loc");
+        CityManager.addCity(savedCity);
         Intent intent = new Intent(MainActivity.this, WeatherActivity.class);
-        intent.putExtra("city_name", "auto_loc");
+        intent.putExtra("city_weather_id", "auto_loc");
         startActivity(intent);
         this.finish();
     }

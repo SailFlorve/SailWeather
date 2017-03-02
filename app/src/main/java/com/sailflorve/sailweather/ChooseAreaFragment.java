@@ -20,6 +20,7 @@ import android.widget.Toast;
 import com.sailflorve.sailweather.db.City;
 import com.sailflorve.sailweather.db.County;
 import com.sailflorve.sailweather.db.Province;
+import com.sailflorve.sailweather.db.SavedCity;
 import com.sailflorve.sailweather.gson.Weather;
 import com.sailflorve.sailweather.util.HttpUtil;
 import com.sailflorve.sailweather.util.Settings;
@@ -39,6 +40,7 @@ public class ChooseAreaFragment extends Fragment {
     public static final int LEVEL_PROVINCE = 0;
     public static final int LEVEL_CITY = 1;
     public static final int LEVEL_COUNTY = 2;
+    public static final int LEVEL_INPUT = 3;
     private ProgressDialog progressDialog;
     private TextView titleText;
     private Button backButton;
@@ -51,6 +53,7 @@ public class ChooseAreaFragment extends Fragment {
     private List<Province> provinceList;
     private List<City> cityList;
     private List<County> countyList;
+    List<Weather> inputCities;
 
     private Province selectedProvince;
     private City selectedCity;
@@ -86,11 +89,25 @@ public class ChooseAreaFragment extends Fragment {
                     selectedCity = cityList.get(position);
                     queryCounties();
                 } else if (currentLevel == LEVEL_COUNTY) {
-                    String cityName = countyList.get(position).getCountyName();
-                    CityManager.addCity(cityName);
+                    SavedCity savedCity = new SavedCity();
+                    savedCity.setName(countyList.get(position).getCountyName());
+                    savedCity.setWeatherId(countyList.get(position).getWeatherId());
+                    CityManager.addCity(savedCity);
 
                     Intent intent = new Intent(getActivity(), WeatherActivity.class);
-                    intent.putExtra("city_name", cityName);
+                    intent.putExtra("city_weather_id", countyList.get(position).getWeatherId());
+                    settings.put("auto_loc", false);
+                    startActivity(intent);
+                    getActivity().finish();
+                } else if (currentLevel == LEVEL_INPUT) {
+                    Weather weather = inputCities.get(position);
+                    SavedCity city = new SavedCity();
+                    city.setName(weather.basic.cityName);
+                    city.setWeatherId(weather.basic.cityWeatherId);
+                    CityManager.addCity(city);
+
+                    Intent intent = new Intent(getContext(), WeatherActivity.class);
+                    intent.putExtra("city_weather_id", city.getWeatherId());
                     settings.put("auto_loc", false);
                     startActivity(intent);
                     getActivity().finish();
@@ -105,6 +122,9 @@ public class ChooseAreaFragment extends Fragment {
                     queryCities();
                 } else if (currentLevel == LEVEL_CITY) {
                     queryProvinces();
+                } else if (currentLevel == LEVEL_INPUT) {
+                    queryProvinces();
+                    editText.setText(null);
                 }
             }
         });
@@ -120,11 +140,12 @@ public class ChooseAreaFragment extends Fragment {
         okCityButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final String input = editText.getText().toString();
+                final String input = editText.getText().toString().trim();
                 if (TextUtils.isEmpty(input)) {
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            queryProvinces();
                             Toast.makeText(getContext(), "还未输入城市哦", Toast.LENGTH_SHORT).show();
                         }
                     });
@@ -145,35 +166,41 @@ public class ChooseAreaFragment extends Fragment {
 
                     @Override
                     public void onResponse(Call call, Response response) throws IOException {
-                        Weather weather = Utility.handleWeatherResponse(response.body().string());
+                        //Weather weather = Utility.handleWeatherResponse(response.body().string());
+                        inputCities = Utility.handleInputCityResponse(response.body().string());
                         closeProgressDialog();
-                        if (!weather.status.equals("ok")) {
+                        if (!inputCities.get(0).status.equals("ok")) {
                             getActivity().runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
+                                    queryProvinces();
                                     Toast.makeText(getContext(), "未找到此城市，请重新输入", Toast.LENGTH_SHORT).show();
                                 }
                             });
                         } else {
-                            CityManager.addCity(input.trim());
-                            Intent intent = new Intent(getContext(), WeatherActivity.class);
-                            intent.putExtra("city_name", input);
-                            settings.put("auto_loc", false);
-                            startActivity(intent);
-                            getActivity().finish();
-//                            runOnUiThread(new Runnable() {
-//                                @Override
-//                                public void run() {
-//                                    Toast.makeText(MainActivity.this, "发现此城市！", Toast.LENGTH_SHORT).show();
-//                                }
-//                            });
+                            currentLevel = LEVEL_INPUT;
+                            dataList.clear();
+                            for (int i = 0; i < inputCities.size(); i++) {
+                                StringBuilder name = new StringBuilder();
+                                Weather weather = inputCities.get(i);
+                                name.append(weather.basic.cityName).append("，");
+                                name.append(TextUtils.isEmpty(weather.basic.province) ? "" : weather.basic.province + "，");
+                                name.append(weather.basic.country);
+                                dataList.add(name.toString());
+                            }
+                            getActivity().runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    backButton.setVisibility(View.VISIBLE);
+                                    adapter.notifyDataSetChanged();
+                                }
+                            });
                         }
-
                     }
+
                 });
             }
         });
-
         queryProvinces();
     }
 

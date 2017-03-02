@@ -1,10 +1,12 @@
 package com.sailflorve.sailweather;
 
 
+import android.util.Log;
 import android.widget.Toast;
 
-import com.sailflorve.sailweather.db.City;
-import com.sailflorve.sailweather.util.Settings;
+import com.sailflorve.sailweather.db.SavedCity;
+
+import org.litepal.crud.DataSupport;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,50 +14,48 @@ import java.util.List;
 public class CityManager {
     private static String cities;
 
-    private static List<String> cityList;
-
-    private static Settings settings;
+    private static List<String> cityStringList;
+    private static List<SavedCity> savedCities;
 
     static {
-        settings = new Settings(MyApplication.getContext());
-        cityList = new ArrayList<>();
+        cityStringList = new ArrayList<>();
+        savedCities = new ArrayList<>();
     }
 
     public static void loadCities() {
-        cityList = new ArrayList<>();
-        cities = (String) settings.get("saved_cities", null);
-
-        if (cities != null) {
-            String[] cityArray = cities.split(",");
-            for (String city : cityArray) {
-                addCity(city);
+        cityStringList = new ArrayList<>();
+        try {
+            savedCities = DataSupport.findAll(SavedCity.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (savedCities.size() > 0) {
+            for (SavedCity city : savedCities) {
+                cityStringList.add(city.getName());
             }
         }
     }
 
-    public static void saveCities() {
-        StringBuilder builder = new StringBuilder();
-        for (String city : cityList) {
-            builder.append(city);
-            builder.append(",");
-        }
-        settings.put("saved_cities", builder.toString());
+    public static void addCity(SavedCity city) {
+        List<SavedCity> cities = DataSupport.where("weatherId = ?", city.getWeatherId()).find(SavedCity.class);
+        if (cities.size() > 0) return;
+        city.save();
+        cityStringList.add(city.getName());
+        savedCities.add(city);
     }
 
-    public static void addCity(String cityName) {
-        if (!cityList.contains(cityName)) {
-            cityList.add(cityName);
-            saveCities();
-        }
+    public static void deleteCity(int position) {
+        savedCities.get(position).delete();
+        Toast.makeText(MyApplication.getContext(), savedCities.get(position).getName() + " 已被删除", Toast.LENGTH_SHORT).show();
+        cityStringList.remove(position);
+        savedCities.remove(position);
     }
 
-    public static void deleteCity(String cityName) {
-        Toast.makeText(MyApplication.getContext(), "已删除 " + cityName, Toast.LENGTH_SHORT).show();
-        cityList.remove(cityName);
-        saveCities();
+    public static List<String> getCityStringList() {
+        return cityStringList;
     }
 
-    public static List<String> getCityList() {
-        return cityList;
+    public static List<SavedCity> getSavedCityList() {
+        return savedCities;
     }
 }

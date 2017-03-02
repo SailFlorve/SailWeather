@@ -9,6 +9,12 @@ public class Basic {
     @SerializedName("id")
     public String cityWeatherId;
 
+    @SerializedName("prov")
+    public String province;
+
+    @SerializedName("cnty")
+    public String country;
+
     public Update update;
 
     public class Update {
