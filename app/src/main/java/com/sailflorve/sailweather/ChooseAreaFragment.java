@@ -193,6 +193,7 @@ public class ChooseAreaFragment extends Fragment {
                                 public void run() {
                                     backButton.setVisibility(View.VISIBLE);
                                     adapter.notifyDataSetChanged();
+                                    titleText.setText("选择城市");
                                 }
                             });
                         }
@@ -208,7 +209,7 @@ public class ChooseAreaFragment extends Fragment {
     //如果还没有数据库，就用queryFromServer请求返回省数据的JSON数组，再加入数据库。
     //dataList为listview的adapter绑定的list，通知list更新。
     private void queryProvinces() {
-        titleText.setText("选择省/直辖市");
+        titleText.setText("选择城市");
         backButton.setVisibility(View.GONE);
         provinceList = DataSupport.findAll(Province.class);
         if (provinceList.size() > 0) {
