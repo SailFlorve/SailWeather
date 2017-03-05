@@ -439,7 +439,7 @@ public class DashboardView extends View {
 //        canvas.drawCircle(mCenterX, mCenterY, mCircleRadius + dpToPx(2), mPaintPointer);
 
         // 绘制读数
-        mPaintValue.setTextSize(85);
+        mPaintValue.setTextSize(100);
         canvas.drawText(trimFloat(mRealTimeValue), mCenterX,
                 mCenterY + mCircleRadius + dpToPx(5), mPaintValue);
     }
