@@ -10,7 +10,6 @@
     android:layout_marginRight="15dp"
     android:layout_marginTop="15dp"
     android:clickable="true"
-    android:elevation="5dp"
     android:foreground="?android:attr/selectableItemBackground"
     app:cardBackgroundColor="#a0000000"
     app:cardCornerRadius="4dp">

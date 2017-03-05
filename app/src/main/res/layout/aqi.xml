@@ -1,21 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.widget.CardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/aqi_layout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="15dp"
     android:clickable="true"
-    android:elevation="5dp"
     android:foreground="?android:attr/selectableItemBackground"
     app:cardBackgroundColor="#a0000000"
     app:cardCornerRadius="4dp">
 
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                  android:layout_width="match_parent"
-                  android:layout_height="wrap_content"
-                  android:orientation="vertical">
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/qlty_text"
@@ -25,72 +23,63 @@
             android:layout_marginTop="15dp"
             android:text="空气质量"
             android:textColor="#fff"
-            android:textSize="20sp"/>
+            android:textSize="20sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="15dp">
+            android:layout_margin="15dp"
+            android:orientation="horizontal">
 
-            <RelativeLayout
+            <LinearLayout
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1">
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="horizontal">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_centerInParent="true"
-                    android:orientation="vertical">
+                <com.sailflorve.sailweather.view.DashboardView
+                    android:id="@+id/aqi_dashboard_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    app:bigSliceCount="0"
+                    app:circleRadius="0dp"
+                    app:headerRadius="-20dp"
+                    app:headerTitle="空气质量指数"
+                    app:maxValue="500"
+                    app:measureTextSize="0sp"
+                    app:pointerRadius="0dp"
+                    app:radius="50dp"
+                    app:realTimeValue="0"
+                    app:startAngle="150"
+                    app:stripeWidth="30dp"
+                    app:sweepAngle="240" />
+            </LinearLayout>
 
-                    <TextView
-                        android:id="@+id/aqi_text"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:textColor="#fff"
-                        android:textSize="40sp"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:text="空气质量指数"
-                        android:textColor="#fff"/>
-
-                </LinearLayout>
-            </RelativeLayout>
-
-
-            <RelativeLayout
+            <LinearLayout
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1">
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_centerInParent="true"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/pm25_text"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:textColor="#fff"
-                        android:textSize="40sp"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:text="PM2.5指数"
-                        android:textColor="#fff"/>
-                </LinearLayout>
-            </RelativeLayout>
-
-
+                <com.sailflorve.sailweather.view.DashboardView
+                    android:id="@+id/pm25_dashboard_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    app:bigSliceCount="0"
+                    app:circleRadius="0dp"
+                    app:headerRadius="-20dp"
+                    app:headerTitle="PM2.5指数"
+                    app:maxValue="500"
+                    app:measureTextSize="9sp"
+                    app:pointerRadius="0dp"
+                    app:radius="50dp"
+                    app:realTimeValue="0"
+                    app:startAngle="150"
+                    app:stripeWidth="30dp"
+                    app:sweepAngle="240" />
+            </LinearLayout>
         </LinearLayout>
 
     </LinearLayout>

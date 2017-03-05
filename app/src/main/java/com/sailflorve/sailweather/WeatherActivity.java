@@ -17,7 +17,6 @@ import android.os.Bundle;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.PopupMenu;
 import android.text.Html;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -45,6 +44,8 @@ import com.sailflorve.sailweather.gson.Weather;
 import com.sailflorve.sailweather.util.HttpUtil;
 import com.sailflorve.sailweather.util.Settings;
 import com.sailflorve.sailweather.util.Utility;
+import com.sailflorve.sailweather.view.DashboardView;
+import com.sailflorve.sailweather.view.HighlightCR;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -68,8 +69,8 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     private TextView weatherInfoText;
     private LinearLayout forecastLayout;
     private LinearLayout hourlyForecastLayout;
-    private TextView aqiText;
-    private TextView pm25Text;
+    private DashboardView aqiDashboardView;
+    private DashboardView pm25DashboardView;
     private TextView qualityText;
     private TextView comfortText;
     private TextView sportText;
@@ -90,18 +91,21 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     private ListView savedCitiesListView;
     private ListView themeListView;
 
-    private final String weatherKey = "d8adf978646b45e2875b82c9fed6d3eb";
     private String mCityName;
 
     private Settings settings;
     private LocationClient client;
 
-    private final String CURRENT_VERSION = "1.8.7";
+    private final String weatherKey = "d8adf978646b45e2875b82c9fed6d3eb";
+    private final String CURRENT_VERSION = "1.9.0";
     private final String appInfo = "Sail天气 Ver " + CURRENT_VERSION;
 
-    final int[] themesId = {R.style.AppTheme, R.style.RedTheme, R.style.PinkTheme,
+    private final int[] themesId = {R.style.AppTheme, R.style.RedTheme, R.style.PinkTheme,
             R.style.PurpleTheme, R.style.DeepPurpleTheme, R.style.IndigoTheme,
             R.style.BlueTheme, R.style.GreenTheme, R.style.BrownTheme, R.style.BleGreyTheme};
+
+    private final String[] aqiColors = {"#4CAF50", "#FBC02D", "#FF9800", "#F44336", "#D32F2F",
+            "#D32F2F", "#B71C1C", "#BF360C", "#BF360C", "#BF360C"};
 
     private Boolean showBingPic;
 
@@ -129,7 +133,6 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         }
         setContentView(R.layout.activity_weather);
 
-        //初始化各个控件
         bingPicImg = (ImageView) findViewById(R.id.bing_pic_img);
         weatherLayout = (ScrollView) findViewById(R.id.weather_layout);
         titleCity = (TextView) findViewById(R.id.title_city);
@@ -138,8 +141,8 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         weatherInfoText = (TextView) findViewById(R.id.weather_info_text);
         forecastLayout = (LinearLayout) findViewById(R.id.forecast_layout);
         hourlyForecastLayout = (LinearLayout) findViewById(R.id.hourly_forecast_layout);
-        aqiText = (TextView) findViewById(R.id.aqi_text);
-        pm25Text = (TextView) findViewById(R.id.pm25_text);
+        aqiDashboardView = (DashboardView) findViewById(R.id.aqi_dashboard_view);
+        pm25DashboardView = (DashboardView) findViewById(R.id.pm25_dashboard_view);
         qualityText = (TextView) findViewById(R.id.qlty_text);
         comfortText = (TextView) findViewById(R.id.comfort_text);
         sportText = (TextView) findViewById(R.id.sport_text);
@@ -175,6 +178,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         menuButton.setOnClickListener(this);
 
         checkUpdate("load");
+        initDashboards();
         initViewLists();
         initWeather();
 
@@ -243,8 +247,6 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             public void onClick(View v) {
                 String[] items = new String[]{"使用 Bing 每日一图", "自定义图片"};
                 AlertDialog dialog = new AlertDialog.Builder(WeatherActivity.this)
-                        .setTitle("更改图片")
-                        .setIcon(android.R.drawable.ic_menu_gallery)
                         .setItems(items, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
@@ -289,6 +291,15 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                 startActivity(intent);
                 break;
             default:
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
         }
     }
 
@@ -379,8 +390,9 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             titleUpdateTime.setText("获取天气信息失败");
             weatherInfoText.setText("null");
             qualityText.setText("null");
-            aqiText.setText("null");
-            pm25Text.setText("null");
+            //aqiText.setText("null");
+            aqiDashboardView.setRealTimeValue(0);
+            pm25DashboardView.setRealTimeValue(0);
             comfortText.setText("null");
             sportText.setText("null");
             fluText.setText("null");
@@ -393,8 +405,8 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         }
     }
 
+    //初始化侧滑菜单栏列表
     private void initViewLists() {
-
         themeList.add("选择主题色");
         showBingPic = (Boolean) settings.get("show_bing_pic", true);
         if (!showBingPic) {
@@ -411,6 +423,13 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         adapter2 = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, CityManager.getCityStringList());
         savedCitiesListView.setAdapter(adapter2);
         savedCitiesListView.setDividerHeight(0);
+    }
+
+    private void initDashboards() {
+        aqiDashboardView.setRealTimeValue(0);
+        aqiDashboardView.setArcColor(Color.parseColor("#FFFFFF"));
+        pm25DashboardView.setRealTimeValue(0);
+        pm25DashboardView.setArcColor(Color.parseColor("#FFFFFF"));
     }
 
     private void showAboutDialog() {
@@ -608,8 +627,24 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     private void showAqiInfo(Weather weather) {
         if (weather.aqi != null) {
             qualityText.setText(Html.fromHtml("空气质量<font><small>：" + weather.aqi.city.qlty + "</small></font>"));
-            aqiText.setText(weather.aqi.city.aqi);
-            pm25Text.setText(weather.aqi.city.pm25);
+            //aqiText.setText(weather.aqi.city.aqi);
+            float aqi = Float.parseFloat(weather.aqi.city.aqi);
+            aqiDashboardView.setRealTimeValue(aqi, true, 0);
+            List<HighlightCR> highlight = new ArrayList<>();
+            int aqiColorAngel = (int) (240 * (aqi / 500));//空气质量指数所占的角度
+            int blankColorAngel = (int) (240 - 240 * (aqi / 500));//剩余角度
+            highlight.add(new HighlightCR(150, aqiColorAngel, Color.parseColor(aqiColors[(int) aqi / 50])));
+            highlight.add(new HighlightCR(150 + aqiColorAngel, blankColorAngel, Color.parseColor("#FFFFFF")));
+            aqiDashboardView.setStripeHighlightColorAndRange(highlight);
+
+            float pm25 = Float.parseFloat(weather.aqi.city.pm25);
+            pm25DashboardView.setRealTimeValue(Float.parseFloat(weather.aqi.city.pm25), true, 0);
+            highlight = new ArrayList<>();
+            aqiColorAngel = (int) (240 * (pm25 / 500));
+            blankColorAngel = (int) (240 - 240 * (pm25 / 500));
+            highlight.add(new HighlightCR(150, aqiColorAngel, Color.parseColor(aqiColors[(int) pm25 / 50])));
+            highlight.add(new HighlightCR(150 + aqiColorAngel, blankColorAngel, Color.parseColor("#FFFFFF")));
+            pm25DashboardView.setStripeHighlightColorAndRange(highlight);
         } else {
             aqiLayout.setVisibility(View.GONE);
         }

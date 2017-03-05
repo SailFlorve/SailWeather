@@ -10,7 +10,6 @@
         android:layout_height="match_parent"
         android:scaleType="centerCrop" />
 
-    <!--TODO: 上传头像-->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">

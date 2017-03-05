@@ -38,18 +38,12 @@
                     android:orientation="vertical">
 
                     <include layout="@layout/title"/>
-
                     <include layout="@layout/now"/>
                     <include layout="@layout/forecast"/>
                     <include layout="@layout/aqi"/>
                     <include layout="@layout/hourly_forecast"/>
-
-
-
-
-
                     <include layout="@layout/suggestion"/>
-
+                    <include layout="@layout/bottom_info"/>
 
                 </LinearLayout>
 
@@ -67,7 +61,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="1.2">
+                android:layout_weight="1">
 
                 <include layout="@layout/app_primary"/>
             </LinearLayout>
