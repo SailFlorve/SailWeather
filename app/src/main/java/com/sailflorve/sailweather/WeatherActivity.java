@@ -358,7 +358,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         if (settings.get("bing_pic_json", null) == null && !Utility.isNetworkAvailable(WeatherActivity.this)) {
             if ((boolean) settings.get("use_bing_pic", true)) {
                 Glide.with(WeatherActivity.this).load(R.drawable.bg).crossFade(500).
-                        bitmapTransform(new BlurTransformation(WeatherActivity.this, 25, 1)).into(bingPicImg);
+                        bitmapTransform(new BlurTransformation(WeatherActivity.this, 40, 1)).into(bingPicImg);
                 Glide.with(WeatherActivity.this).load(R.drawable.weather_pic).crossFade(500).into(appImage);
             } else {
                 Glide.with(WeatherActivity.this).load(Uri.parse((String) settings.get("uri_string", null))).
@@ -686,7 +686,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             final BingImages images = Utility.handleBingResponse(oldBingPic);
             mImageUrl = "http://s.cn.bing.net" + images.url;
             Glide.with(WeatherActivity.this).load(mImageUrl).error(R.drawable.bg).crossFade(800).
-                    bitmapTransform(new BlurTransformation(WeatherActivity.this, 25, 1)).into(bingPicImg);
+                    bitmapTransform(new BlurTransformation(WeatherActivity.this, 40, 1)).into(bingPicImg);
             if (!(boolean) settings.get("use_bing_pic", true)) {
                 Glide.with(WeatherActivity.this).load(Uri.parse((String) settings.get("uri_string", null))).
                         error(R.drawable.weather_pic).into(appImage);
@@ -726,7 +726,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                     @Override
                     public void run() {
                         Glide.with(WeatherActivity.this).load(mImageUrl).error(R.drawable.bg).crossFade(800).
-                                bitmapTransform(new BlurTransformation(WeatherActivity.this, 25, 1)).into(bingPicImg);
+                                bitmapTransform(new BlurTransformation(WeatherActivity.this, 40, 1)).into(bingPicImg);
                         if (!(boolean) settings.get("use_bing_pic", true)) {
                             Glide.with(WeatherActivity.this).load(Uri.parse((String) settings.get("uri_string", null))).
                                     error(R.drawable.weather_pic).into(appImage);

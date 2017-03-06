@@ -119,12 +119,12 @@ public class CircleBar extends View {
                 textStr + "",
                 (mColorWheelRectangle.centerX())
                         - (textPaint.measureText(textStr) / 2),
-                mColorWheelRectangle.centerY() + bounds.height() / 2 ,
+                mColorWheelRectangle.centerY() + bounds.height() / 2 + dip2px(getContext(), 3),
                 textPaint);
         canvas.drawText(mTextDes,
                 (mColorWheelRectangle.centerX())
                         - (textDesPaint.measureText(mTextDes) / 2),
-                mColorWheelRectangle.centerY() + bounds.height() / 2 + 150 - mDistance
+                mColorWheelRectangle.centerY() + bounds.height() / 2 + 180 - mDistance
                 , textDesPaint);
     }
 

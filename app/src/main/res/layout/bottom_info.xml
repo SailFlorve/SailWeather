@@ -14,7 +14,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text=" 和风天气"
+        android:text=" 和风天气 提供数据"
         android:textSize="12sp"
         android:layout_gravity="center_vertical"
         android:textColor="#e6e6e6"/>
