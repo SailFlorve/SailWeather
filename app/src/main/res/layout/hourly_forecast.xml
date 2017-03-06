@@ -4,12 +4,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="15dp"
+    android:layout_margin="5dp"
     android:clickable="true"
-    android:elevation="5dp"
     android:foreground="?android:attr/selectableItemBackground"
     app:cardBackgroundColor="#a0000000"
-    app:cardCornerRadius="4dp"
+    app:cardCornerRadius="1dp"
     android:id="@+id/hourly_forecast_card_view">
 
     <LinearLayout

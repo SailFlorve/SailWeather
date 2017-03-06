@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_weather"
     android:layout_width="match_parent"
@@ -12,7 +11,14 @@
         android:id="@+id/bing_pic_img"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scaleType="centerCrop"/>
+        android:scaleType="centerCrop" />
+
+    <ImageView
+        android:id="@+id/pure_color_img"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="?attr/colorPrimaryDark"
+        android:visibility="invisible" />
 
     <android.support.v4.widget.DrawerLayout
         android:id="@+id/drawer_layout"
@@ -37,13 +43,19 @@
                     android:fitsSystemWindows="true"
                     android:orientation="vertical">
 
-                    <include layout="@layout/title"/>
-                    <include layout="@layout/now"/>
-                    <include layout="@layout/forecast"/>
-                    <include layout="@layout/aqi"/>
-                    <include layout="@layout/hourly_forecast"/>
-                    <include layout="@layout/suggestion"/>
-                    <include layout="@layout/bottom_info"/>
+                    <include layout="@layout/title" />
+
+                    <include layout="@layout/now" />
+
+                    <include layout="@layout/forecast" />
+
+                    <include layout="@layout/aqi" />
+
+                    <include layout="@layout/hourly_forecast" />
+
+                    <include layout="@layout/suggestion" />
+
+                    <include layout="@layout/bottom_info" />
 
                 </LinearLayout>
 
@@ -63,7 +75,7 @@
                 android:layout_height="0dp"
                 android:layout_weight="1">
 
-                <include layout="@layout/app_primary"/>
+                <include layout="@layout/app_primary" />
             </LinearLayout>
 
 
@@ -79,7 +91,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
-                    <include layout="@layout/theme_settings"/>
+                    <include layout="@layout/theme_settings" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -88,17 +100,17 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentBottom="true">
 
-                    <include layout="@layout/others_settings"/>
+                    <include layout="@layout/others_settings" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/city_manager_layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_below="@id/theme_settings_layout"
-                    android:layout_above="@id/bottom_layout">
+                    android:layout_above="@id/bottom_layout"
+                    android:layout_below="@id/theme_settings_layout">
 
-                    <include layout="@layout/city_list"/>
+                    <include layout="@layout/city_list" />
                 </LinearLayout>
 
 
@@ -116,6 +128,6 @@
         android:layout_height="match_parent"
         android:layout_margin="15dp"
         android:background="#00000000"
-        android:visibility="invisible"/>
+        android:visibility="invisible" />
 
 </FrameLayout>

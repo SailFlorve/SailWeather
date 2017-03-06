@@ -46,7 +46,8 @@ public class CityManager {
 
     public static void deleteCity(int position) {
         savedCities.get(position).delete();
-        Toast.makeText(MyApplication.getContext(), savedCities.get(position).getName() + " 已被删除", Toast.LENGTH_SHORT).show();
+        Toast.makeText(MyApplication.getContext(), savedCities.get(position).getName()
+                + " 已被删除", Toast.LENGTH_SHORT).show();
         cityStringList.remove(position);
         savedCities.remove(position);
     }

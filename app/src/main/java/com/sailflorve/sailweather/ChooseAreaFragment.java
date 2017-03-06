@@ -63,7 +63,8 @@ public class ChooseAreaFragment extends Fragment {
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater,
+                             @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.choose_area, container, false);
         titleText = (TextView) view.findViewById(R.id.title_text);
         backButton = (Button) view.findViewById(R.id.back_button);
@@ -152,7 +153,8 @@ public class ChooseAreaFragment extends Fragment {
                     return;
                 }
                 showProgressDialog();
-                HttpUtil.sendHttpRequest("https://free-api.heweather.com/v5/search?city=" + input + "&key=d8adf978646b45e2875b82c9fed6d3eb", new Callback() {
+                HttpUtil.sendHttpRequest("https://free-api.heweather.com/v5/search?city="
+                        + input + "&key=d8adf978646b45e2875b82c9fed6d3eb", new Callback() {
                     @Override
                     public void onFailure(Call call, IOException e) {
                         getActivity().runOnUiThread(new Runnable() {

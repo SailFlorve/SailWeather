@@ -4,11 +4,11 @@
     android:id="@+id/aqi_layout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="15dp"
+    android:layout_margin="5dp"
     android:clickable="true"
     android:foreground="?android:attr/selectableItemBackground"
     app:cardBackgroundColor="#a0000000"
-    app:cardCornerRadius="4dp">
+    app:cardCornerRadius="1dp">
 
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
@@ -28,58 +28,38 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="15dp"
+            android:layout_marginTop="20dp"
             android:orientation="horizontal">
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginLeft="15dp"
                 android:layout_weight="1"
                 android:gravity="center"
                 android:orientation="horizontal">
 
-                <com.sailflorve.sailweather.view.DashboardView
-                    android:id="@+id/aqi_dashboard_view"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    app:bigSliceCount="0"
-                    app:circleRadius="0dp"
-                    app:headerRadius="-20dp"
-                    app:headerTitle="空气质量指数"
-                    app:maxValue="500"
-                    app:measureTextSize="0sp"
-                    app:pointerRadius="0dp"
-                    app:radius="50dp"
-                    app:realTimeValue="0"
-                    app:startAngle="150"
-                    app:stripeWidth="30dp"
-                    app:sweepAngle="240" />
+                <com.sailflorve.sailweather.view.CircleBar
+                    android:id="@+id/aqi_circle_bar"
+                    android:layout_width="120dp"
+                    android:layout_height="120dp" />
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginRight="15dp"
                 android:layout_weight="1"
                 android:gravity="center"
                 android:orientation="vertical">
 
-                <com.sailflorve.sailweather.view.DashboardView
-                    android:id="@+id/pm25_dashboard_view"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    app:bigSliceCount="0"
-                    app:circleRadius="0dp"
-                    app:headerRadius="-20dp"
-                    app:headerTitle="PM2.5指数"
-                    app:maxValue="500"
-                    app:measureTextSize="9sp"
-                    app:pointerRadius="0dp"
-                    app:radius="50dp"
-                    app:realTimeValue="0"
-                    app:startAngle="150"
-                    app:stripeWidth="30dp"
-                    app:sweepAngle="240" />
+                <com.sailflorve.sailweather.view.CircleBar
+                    android:id="@+id/pm25_circle_bar"
+                    android:layout_width="120dp"
+                    android:layout_height="120dp" />
+
             </LinearLayout>
+
         </LinearLayout>
 
     </LinearLayout>

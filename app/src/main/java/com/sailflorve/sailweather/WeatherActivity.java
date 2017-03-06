@@ -44,13 +44,12 @@ import com.sailflorve.sailweather.gson.Weather;
 import com.sailflorve.sailweather.util.HttpUtil;
 import com.sailflorve.sailweather.util.Settings;
 import com.sailflorve.sailweather.util.Utility;
-import com.sailflorve.sailweather.view.DashboardView;
-import com.sailflorve.sailweather.view.HighlightCR;
-
+import com.sailflorve.sailweather.view.CircleBar;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import jp.wasabeef.glide.transformations.BlurTransformation;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
@@ -69,8 +68,8 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     private TextView weatherInfoText;
     private LinearLayout forecastLayout;
     private LinearLayout hourlyForecastLayout;
-    private DashboardView aqiDashboardView;
-    private DashboardView pm25DashboardView;
+    private CircleBar aqiCircleBar;
+    private CircleBar pm25CircleBar;
     private TextView qualityText;
     private TextView comfortText;
     private TextView sportText;
@@ -81,6 +80,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     private TextView uvText;
     private ImageView bingPicImg;
     private ImageView weatherPic;
+    private ImageView pureColorImg;
     private TextView windInfo;
     public SwipeRefreshLayout swipeRefresh;
     private ImageView fab;
@@ -92,12 +92,13 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     private ListView themeListView;
 
     private String mCityName;
+    private String mImageUrl;
 
     private Settings settings;
     private LocationClient client;
 
     private final String weatherKey = "d8adf978646b45e2875b82c9fed6d3eb";
-    private final String CURRENT_VERSION = "1.9.0";
+    private final String CURRENT_VERSION = "1.9.5";
     private final String appInfo = "Sail天气 Ver " + CURRENT_VERSION;
 
     private final int[] themesId = {R.style.AppTheme, R.style.RedTheme, R.style.PinkTheme,
@@ -120,7 +121,8 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         settings = new Settings(this);
         if (Build.VERSION.SDK_INT >= 21) {
             View decorView = getWindow().getDecorView();
-            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+            decorView.setSystemUiVisibility
+                    (View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
             getWindow().setStatusBarColor(Color.TRANSPARENT);
             //设置主题相关
             int themeNum = (int) settings.get("current_theme", 0);
@@ -134,6 +136,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         setContentView(R.layout.activity_weather);
 
         bingPicImg = (ImageView) findViewById(R.id.bing_pic_img);
+        pureColorImg = (ImageView) findViewById(R.id.pure_color_img);
         weatherLayout = (ScrollView) findViewById(R.id.weather_layout);
         titleCity = (TextView) findViewById(R.id.title_city);
         titleUpdateTime = (TextView) findViewById(R.id.title_update_time);
@@ -141,8 +144,8 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         weatherInfoText = (TextView) findViewById(R.id.weather_info_text);
         forecastLayout = (LinearLayout) findViewById(R.id.forecast_layout);
         hourlyForecastLayout = (LinearLayout) findViewById(R.id.hourly_forecast_layout);
-        aqiDashboardView = (DashboardView) findViewById(R.id.aqi_dashboard_view);
-        pm25DashboardView = (DashboardView) findViewById(R.id.pm25_dashboard_view);
+        aqiCircleBar = (CircleBar) findViewById(R.id.aqi_circle_bar);
+        pm25CircleBar = (CircleBar) findViewById(R.id.pm25_circle_bar);
         qualityText = (TextView) findViewById(R.id.qlty_text);
         comfortText = (TextView) findViewById(R.id.comfort_text);
         sportText = (TextView) findViewById(R.id.sport_text);
@@ -178,7 +181,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         menuButton.setOnClickListener(this);
 
         checkUpdate("load");
-        initDashboards();
+        initCircleBars();
         initViewLists();
         initWeather();
 
@@ -203,13 +206,13 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                     showBingPic = (Boolean) settings.get("show_bing_pic", true);
                     if (showBingPic) {
                         settings.put("show_bing_pic", false);
-                        bingPicImg.setVisibility(View.INVISIBLE);
-                        themeList.set(1, "显示天气背景");
+                        pureColorImg.setVisibility(View.VISIBLE);
+                        themeList.set(1, "显示背景图");
                         adapter1.notifyDataSetChanged();
                     } else if (!showBingPic) {
                         settings.put("show_bing_pic", true);
-                        bingPicImg.setVisibility(View.VISIBLE);
-                        themeList.set(1, "隐藏天气背景");
+                        pureColorImg.setVisibility(View.INVISIBLE);
+                        themeList.set(1, "隐藏背景图");
                         adapter1.notifyDataSetChanged();
                     }
                     drawerLayout.closeDrawer(GravityCompat.START);
@@ -278,6 +281,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             case R.id.float_button:
                 weatherLayout.setVisibility(View.VISIBLE);
                 fab.setVisibility(View.INVISIBLE);
+                loadBingPic();
                 break;
             case R.id.about_button:
                 showAboutDialog();
@@ -331,6 +335,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
 
                     case R.id.watch_wallpaper:
                         Toast.makeText(WeatherActivity.this, "点击任意处恢复", Toast.LENGTH_SHORT).show();
+                        Glide.with(WeatherActivity.this).load(mImageUrl).crossFade(800).into(bingPicImg);
                         weatherLayout.setVisibility(View.INVISIBLE);
                         fab.setVisibility(View.VISIBLE);
                         break;
@@ -352,18 +357,20 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         //如果没有网络且没有缓存， 使用默认背景图
         if (settings.get("bing_pic_json", null) == null && !Utility.isNetworkAvailable(WeatherActivity.this)) {
             if ((boolean) settings.get("use_bing_pic", true)) {
-                Glide.with(WeatherActivity.this).load(R.drawable.bg).crossFade(500).into(bingPicImg);
+                Glide.with(WeatherActivity.this).load(R.drawable.bg).crossFade(500).
+                        bitmapTransform(new BlurTransformation(WeatherActivity.this, 25, 1)).into(bingPicImg);
                 Glide.with(WeatherActivity.this).load(R.drawable.weather_pic).crossFade(500).into(appImage);
             } else {
-                Glide.with(WeatherActivity.this).load(Uri.parse((String) settings.get("uri_string", null))).error(R.drawable.weather_pic).into(appImage);
+                Glide.with(WeatherActivity.this).load(Uri.parse((String) settings.get("uri_string", null))).
+                        error(R.drawable.weather_pic).into(appImage);
             }
         }
 
         showBingPic = (Boolean) settings.get("show_bing_pic", true);
         if (showBingPic) {
-            bingPicImg.setVisibility(View.VISIBLE);
+            pureColorImg.setVisibility(View.INVISIBLE);
         } else {
-            bingPicImg.setVisibility(View.INVISIBLE);
+            pureColorImg.setVisibility(View.VISIBLE);
         }
 
         String weatherString = (String) settings.get("weather", null);
@@ -391,8 +398,8 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             weatherInfoText.setText("null");
             qualityText.setText("null");
             //aqiText.setText("null");
-            aqiDashboardView.setRealTimeValue(0);
-            pm25DashboardView.setRealTimeValue(0);
+            aqiCircleBar.setText("0");
+            pm25CircleBar.setText("0");
             comfortText.setText("null");
             sportText.setText("null");
             fluText.setText("null");
@@ -410,9 +417,9 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         themeList.add("选择主题色");
         showBingPic = (Boolean) settings.get("show_bing_pic", true);
         if (!showBingPic) {
-            themeList.add("显示天气背景");
+            themeList.add("显示背景图");
         } else {
-            themeList.add("隐藏天气背景");
+            themeList.add("隐藏背景图");
         }
         adapter1 = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, themeList);
         themeListView.setAdapter(adapter1);
@@ -425,11 +432,21 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         savedCitiesListView.setDividerHeight(0);
     }
 
-    private void initDashboards() {
-        aqiDashboardView.setRealTimeValue(0);
-        aqiDashboardView.setArcColor(Color.parseColor("#FFFFFF"));
-        pm25DashboardView.setRealTimeValue(0);
-        pm25DashboardView.setArcColor(Color.parseColor("#FFFFFF"));
+    private void initCircleBars() {
+        aqiCircleBar.setDesText("空气质量指数");
+        aqiCircleBar.setText("0");
+        aqiCircleBar.setSweepAngle(0);
+
+        pm25CircleBar.setDesText("PM2.5指数");
+        pm25CircleBar.setText("0");
+        pm25CircleBar.setSweepAngle(0);
+    }
+
+    private void setCircleBarValue(CircleBar circleBar, String text) {
+        float value = Float.parseFloat(text);
+        circleBar.setText(text);
+        circleBar.setSweepAngle(value / 500 * 240);
+        circleBar.setWheelColor(Color.parseColor(aqiColors[(int) value / 50]));
     }
 
     private void showAboutDialog() {
@@ -566,7 +583,8 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         if (!windPower.equals("微风")) windInfoText.append(" 级");
         windInfo.setText(windInfoText.toString());
 
-        loadWeatherIcon(this.getResources().getIdentifier("icon" + weatherCode, "drawable", this.getPackageName()), weatherPic);
+        loadWeatherIcon(this.getResources().
+                getIdentifier("icon" + weatherCode, "drawable", this.getPackageName()), weatherPic);
     }
 
     private void showHourlyForecastInfo(Weather weather) {
@@ -590,7 +608,8 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                 info = "细雨";
             }
             infoText.setText(info);
-            loadWeatherIcon(this.getResources().getIdentifier("icon" + forecast.more.code, "drawable", this.getPackageName()), weatherIcon);
+            loadWeatherIcon(this.getResources().
+                    getIdentifier("icon" + forecast.more.code, "drawable", this.getPackageName()), weatherIcon);
             tmpText.setText(forecast.temperature + " ℃");
 
             StringBuilder windInfoText = new StringBuilder();
@@ -617,7 +636,8 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                 info = "细雨";
             }
             infoText.setText(info);
-            loadWeatherIcon(this.getResources().getIdentifier("icon" + forecast.more.code, "drawable", this.getPackageName()), weatherIcon);
+            loadWeatherIcon(this.getResources().
+                    getIdentifier("icon" + forecast.more.code, "drawable", this.getPackageName()), weatherIcon);
             maxText.setText(forecast.temperature.max + " ℃");
             minText.setText(forecast.temperature.min + " ~ ");
             forecastLayout.addView(view);
@@ -627,24 +647,8 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     private void showAqiInfo(Weather weather) {
         if (weather.aqi != null) {
             qualityText.setText(Html.fromHtml("空气质量<font><small>：" + weather.aqi.city.qlty + "</small></font>"));
-            //aqiText.setText(weather.aqi.city.aqi);
-            float aqi = Float.parseFloat(weather.aqi.city.aqi);
-            aqiDashboardView.setRealTimeValue(aqi, true, 0);
-            List<HighlightCR> highlight = new ArrayList<>();
-            int aqiColorAngel = (int) (240 * (aqi / 500));//空气质量指数所占的角度
-            int blankColorAngel = (int) (240 - 240 * (aqi / 500));//剩余角度
-            highlight.add(new HighlightCR(150, aqiColorAngel, Color.parseColor(aqiColors[(int) aqi / 50])));
-            highlight.add(new HighlightCR(150 + aqiColorAngel, blankColorAngel, Color.parseColor("#FFFFFF")));
-            aqiDashboardView.setStripeHighlightColorAndRange(highlight);
-
-            float pm25 = Float.parseFloat(weather.aqi.city.pm25);
-            pm25DashboardView.setRealTimeValue(Float.parseFloat(weather.aqi.city.pm25), true, 0);
-            highlight = new ArrayList<>();
-            aqiColorAngel = (int) (240 * (pm25 / 500));
-            blankColorAngel = (int) (240 - 240 * (pm25 / 500));
-            highlight.add(new HighlightCR(150, aqiColorAngel, Color.parseColor(aqiColors[(int) pm25 / 50])));
-            highlight.add(new HighlightCR(150 + aqiColorAngel, blankColorAngel, Color.parseColor("#FFFFFF")));
-            pm25DashboardView.setStripeHighlightColorAndRange(highlight);
+            setCircleBarValue(aqiCircleBar, weather.aqi.city.aqi);
+            setCircleBarValue(pm25CircleBar, weather.aqi.city.pm25);
         } else {
             aqiLayout.setVisibility(View.GONE);
         }
@@ -655,12 +659,18 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             suggestionLayout.setVisibility(View.GONE);
             return;
         }
-        String comfort = "舒适度：" + "<font><big>" + weather.suggestion.comfort.level + "</big></font><br><br>" + weather.suggestion.comfort.info;
-        String sport = "运动建议：" + "<font><big>" + weather.suggestion.sport.level + "</big></font><br><br>" + weather.suggestion.sport.info;
-        String flu = "感冒指数：" + "<font><big>" + weather.suggestion.flu.level + "</big></font><br><br>" + weather.suggestion.flu.info;
-        String travel = "旅游指数：" + "<font><big>" + weather.suggestion.travel.level + "</big></font><br><br>" + weather.suggestion.travel.info;
-        String dress = "穿衣指数：" + "<font><big>" + weather.suggestion.dress.level + "</big></font><br><br>" + weather.suggestion.dress.info;
-        String UV = "紫外线指数：" + "<font><big>" + weather.suggestion.uv.level + "</big></font><br><br>" + weather.suggestion.uv.info;
+        String comfort = "舒适度：" + "<font><big>" + weather.suggestion.comfort.level
+                + "</big></font><br><br>" + weather.suggestion.comfort.info;
+        String sport = "运动建议：" + "<font><big>" + weather.suggestion.sport.level
+                + "</big></font><br><br>" + weather.suggestion.sport.info;
+        String flu = "感冒指数：" + "<font><big>" + weather.suggestion.flu.level
+                + "</big></font><br><br>" + weather.suggestion.flu.info;
+        String travel = "旅游指数：" + "<font><big>" + weather.suggestion.travel.level
+                + "</big></font><br><br>" + weather.suggestion.travel.info;
+        String dress = "穿衣指数：" + "<font><big>" + weather.suggestion.dress.level
+                + "</big></font><br><br>" + weather.suggestion.dress.info;
+        String UV = "紫外线指数：" + "<font><big>" + weather.suggestion.uv.level
+                + "</big></font><br><br>" + weather.suggestion.uv.info;
 
         comfortText.setText(Html.fromHtml(comfort));
         sportText.setText(Html.fromHtml(sport));
@@ -674,13 +684,16 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         String oldBingPic = (String) settings.get("bing_pic_json", null);
         if (oldBingPic != null && !Utility.isNewDay()) {
             final BingImages images = Utility.handleBingResponse(oldBingPic);
-            final String imageUrl = "http://s.cn.bing.net" + images.url;
-            Glide.with(WeatherActivity.this).load(imageUrl).error(R.drawable.bg).into(bingPicImg);
+            mImageUrl = "http://s.cn.bing.net" + images.url;
+            Glide.with(WeatherActivity.this).load(mImageUrl).error(R.drawable.bg).crossFade(800).
+                    bitmapTransform(new BlurTransformation(WeatherActivity.this, 25, 1)).into(bingPicImg);
             if (!(boolean) settings.get("use_bing_pic", true)) {
-                Glide.with(WeatherActivity.this).load(Uri.parse((String) settings.get("uri_string", null))).error(R.drawable.weather_pic).into(appImage);
+                Glide.with(WeatherActivity.this).load(Uri.parse((String) settings.get("uri_string", null))).
+                        error(R.drawable.weather_pic).into(appImage);
                 bingPicInfo.setText(appInfo);
             } else {
-                Glide.with(WeatherActivity.this).load(imageUrl).error(R.drawable.weather_pic).crossFade(500).into(appImage);
+                Glide.with(WeatherActivity.this).load(mImageUrl).
+                        error(R.drawable.weather_pic).crossFade(500).into(appImage);
                 String info = images.copyright;
                 String[] infos = info.split("\\(©");
                 bingPicInfo.setText(infos[0] + "\n(©" + infos[1]);
@@ -707,17 +720,19 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             public void onResponse(Call call, Response response) throws IOException {
                 final String bingPic = response.body().string();
                 final BingImages images = Utility.handleBingResponse(bingPic);
-                final String imageUrl = "http://s.cn.bing.net" + images.url;
+                mImageUrl = "http://s.cn.bing.net" + images.url;
                 settings.put("bing_pic_json", bingPic);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Glide.with(WeatherActivity.this).load(imageUrl).error(R.drawable.bg).crossFade(500).into(bingPicImg);
+                        Glide.with(WeatherActivity.this).load(mImageUrl).error(R.drawable.bg).crossFade(800).
+                                bitmapTransform(new BlurTransformation(WeatherActivity.this, 25, 1)).into(bingPicImg);
                         if (!(boolean) settings.get("use_bing_pic", true)) {
-                            Glide.with(WeatherActivity.this).load(Uri.parse((String) settings.get("uri_string", null))).error(R.drawable.weather_pic).into(appImage);
+                            Glide.with(WeatherActivity.this).load(Uri.parse((String) settings.get("uri_string", null))).
+                                    error(R.drawable.weather_pic).into(appImage);
                             bingPicInfo.setText(appInfo);
                         } else {
-                            Glide.with(WeatherActivity.this).load(imageUrl).error(R.drawable.weather_pic).crossFade(500).into(appImage);
+                            Glide.with(WeatherActivity.this).load(mImageUrl).error(R.drawable.weather_pic).into(appImage);
                             String info = images.copyright;
                             String[] infos = info.split("\\(©");
                             bingPicInfo.setText(infos[0] + "\n(©" + infos[1]);
@@ -740,7 +755,8 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         AlertDialog dialog;
         final AlertDialog.Builder builder = new AlertDialog.Builder(WeatherActivity.this);
         builder.setTitle("请选择主题色");
-        final String[] themes = {"炫酷黑", "姨妈红", "哔哩粉", "亮骚紫", "基佬紫", "深邃蓝", "知乎蓝", "草原绿", "绅士棕", "阴天灰"};
+        final String[] themes = {"炫酷黑", "姨妈红", "哔哩粉", "亮骚紫", "基佬紫",
+                "深邃蓝", "知乎蓝", "草原绿", "绅士棕", "阴天灰"};
         //设置一个单项选择下拉框
         builder.setSingleChoiceItems(themes, (int) settings.get("current_theme", 0), new DialogInterface.OnClickListener() {
             @Override
