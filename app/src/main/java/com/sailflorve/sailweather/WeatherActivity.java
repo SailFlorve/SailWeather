@@ -45,6 +45,7 @@ import com.sailflorve.sailweather.util.HttpUtil;
 import com.sailflorve.sailweather.util.Settings;
 import com.sailflorve.sailweather.util.Utility;
 import com.sailflorve.sailweather.view.CircleBar;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -92,13 +93,13 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     private ListView themeListView;
 
     private String mCityName;
-    private String mImageUrl;
+    private String mVerticalImageUrl;
 
     private Settings settings;
     private LocationClient client;
 
     private final String weatherKey = "d8adf978646b45e2875b82c9fed6d3eb";
-    private final String CURRENT_VERSION = "1.9.5";
+    private final String CURRENT_VERSION = "1.9.6";
     private final String appInfo = "Sail天气 Ver " + CURRENT_VERSION;
 
     private final int[] themesId = {R.style.AppTheme, R.style.RedTheme, R.style.PinkTheme,
@@ -335,7 +336,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
 
                     case R.id.watch_wallpaper:
                         Toast.makeText(WeatherActivity.this, "点击任意处恢复", Toast.LENGTH_SHORT).show();
-                        Glide.with(WeatherActivity.this).load(mImageUrl).crossFade(800).into(bingPicImg);
+                        Glide.with(WeatherActivity.this).load(mVerticalImageUrl).crossFade(800).into(bingPicImg);
                         weatherLayout.setVisibility(View.INVISIBLE);
                         fab.setVisibility(View.VISIBLE);
                         break;
@@ -358,7 +359,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         if (settings.get("bing_pic_json", null) == null && !Utility.isNetworkAvailable(WeatherActivity.this)) {
             if ((boolean) settings.get("use_bing_pic", true)) {
                 Glide.with(WeatherActivity.this).load(R.drawable.bg).crossFade(500).
-                        bitmapTransform(new BlurTransformation(WeatherActivity.this, 40, 1)).into(bingPicImg);
+                        bitmapTransform(new BlurTransformation(WeatherActivity.this, 25,8)).into(bingPicImg);
                 Glide.with(WeatherActivity.this).load(R.drawable.weather_pic).crossFade(500).into(appImage);
             } else {
                 Glide.with(WeatherActivity.this).load(Uri.parse((String) settings.get("uri_string", null))).
@@ -684,15 +685,16 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         String oldBingPic = (String) settings.get("bing_pic_json", null);
         if (oldBingPic != null && !Utility.isNewDay()) {
             final BingImages images = Utility.handleBingResponse(oldBingPic);
-            mImageUrl = "http://s.cn.bing.net" + images.url;
-            Glide.with(WeatherActivity.this).load(mImageUrl).error(R.drawable.bg).crossFade(800).
-                    bitmapTransform(new BlurTransformation(WeatherActivity.this, 40, 1)).into(bingPicImg);
+            String imageUrl = "http://s.cn.bing.net" + images.url;
+            mVerticalImageUrl = imageUrl.replace("1920x1080", "1080x1920");
+            Glide.with(WeatherActivity.this).load(mVerticalImageUrl).error(R.drawable.bg).crossFade(800).
+                    bitmapTransform(new BlurTransformation(WeatherActivity.this, 25,8)).into(bingPicImg);
             if (!(boolean) settings.get("use_bing_pic", true)) {
                 Glide.with(WeatherActivity.this).load(Uri.parse((String) settings.get("uri_string", null))).
                         error(R.drawable.weather_pic).into(appImage);
                 bingPicInfo.setText(appInfo);
             } else {
-                Glide.with(WeatherActivity.this).load(mImageUrl).
+                Glide.with(WeatherActivity.this).load(imageUrl).
                         error(R.drawable.weather_pic).crossFade(500).into(appImage);
                 String info = images.copyright;
                 String[] infos = info.split("\\(©");
@@ -720,19 +722,20 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             public void onResponse(Call call, Response response) throws IOException {
                 final String bingPic = response.body().string();
                 final BingImages images = Utility.handleBingResponse(bingPic);
-                mImageUrl = "http://s.cn.bing.net" + images.url;
+                final String imageUrl = "http://s.cn.bing.net" + images.url;
+                mVerticalImageUrl = imageUrl.replace("1920x1080", "1080x1920");
                 settings.put("bing_pic_json", bingPic);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Glide.with(WeatherActivity.this).load(mImageUrl).error(R.drawable.bg).crossFade(800).
-                                bitmapTransform(new BlurTransformation(WeatherActivity.this, 40, 1)).into(bingPicImg);
+                        Glide.with(WeatherActivity.this).load(mVerticalImageUrl).error(R.drawable.bg).crossFade(800).
+                                bitmapTransform(new BlurTransformation(WeatherActivity.this,25,8)).into(bingPicImg);
                         if (!(boolean) settings.get("use_bing_pic", true)) {
                             Glide.with(WeatherActivity.this).load(Uri.parse((String) settings.get("uri_string", null))).
                                     error(R.drawable.weather_pic).into(appImage);
                             bingPicInfo.setText(appInfo);
                         } else {
-                            Glide.with(WeatherActivity.this).load(mImageUrl).error(R.drawable.weather_pic).into(appImage);
+                            Glide.with(WeatherActivity.this).load(imageUrl).error(R.drawable.weather_pic).into(appImage);
                             String info = images.copyright;
                             String[] infos = info.split("\\(©");
                             bingPicInfo.setText(infos[0] + "\n(©" + infos[1]);
