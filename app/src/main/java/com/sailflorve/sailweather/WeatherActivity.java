@@ -99,7 +99,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
     private LocationClient client;
 
     private final String weatherKey = "d8adf978646b45e2875b82c9fed6d3eb";
-    private final String CURRENT_VERSION = "1.9.6";
+    private final String CURRENT_VERSION = "1.9.7";
     private final String appInfo = "Sail天气 Ver " + CURRENT_VERSION;
 
     private final int[] themesId = {R.style.AppTheme, R.style.RedTheme, R.style.PinkTheme,
@@ -359,7 +359,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
         if (settings.get("bing_pic_json", null) == null && !Utility.isNetworkAvailable(WeatherActivity.this)) {
             if ((boolean) settings.get("use_bing_pic", true)) {
                 Glide.with(WeatherActivity.this).load(R.drawable.bg).crossFade(500).
-                        bitmapTransform(new BlurTransformation(WeatherActivity.this, 25,8)).into(bingPicImg);
+                        bitmapTransform(new BlurTransformation(WeatherActivity.this, 25, 8)).into(bingPicImg);
                 Glide.with(WeatherActivity.this).load(R.drawable.weather_pic).crossFade(500).into(appImage);
             } else {
                 Glide.with(WeatherActivity.this).load(Uri.parse((String) settings.get("uri_string", null))).
@@ -688,7 +688,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
             String imageUrl = "http://s.cn.bing.net" + images.url;
             mVerticalImageUrl = imageUrl.replace("1920x1080", "1080x1920");
             Glide.with(WeatherActivity.this).load(mVerticalImageUrl).error(R.drawable.bg).crossFade(800).
-                    bitmapTransform(new BlurTransformation(WeatherActivity.this, 25,8)).into(bingPicImg);
+                    bitmapTransform(new BlurTransformation(WeatherActivity.this, 25, 8)).into(bingPicImg);
             if (!(boolean) settings.get("use_bing_pic", true)) {
                 Glide.with(WeatherActivity.this).load(Uri.parse((String) settings.get("uri_string", null))).
                         error(R.drawable.weather_pic).into(appImage);
@@ -697,8 +697,13 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                 Glide.with(WeatherActivity.this).load(imageUrl).
                         error(R.drawable.weather_pic).crossFade(500).into(appImage);
                 String info = images.copyright;
-                String[] infos = info.split("\\(©");
-                bingPicInfo.setText(infos[0] + "\n(©" + infos[1]);
+                String[] picInfo = info.split("\\(©");
+                StringBuilder infoBuilder = new StringBuilder();
+                for (int i = 0; i < picInfo.length; i++) {
+                    if (i > 0) infoBuilder.append("\n");
+                    infoBuilder.append(picInfo[i]);
+                }
+                bingPicInfo.setText(infoBuilder.toString());
             }
             return;
         }
@@ -729,7 +734,7 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                     @Override
                     public void run() {
                         Glide.with(WeatherActivity.this).load(mVerticalImageUrl).error(R.drawable.bg).crossFade(800).
-                                bitmapTransform(new BlurTransformation(WeatherActivity.this,25,8)).into(bingPicImg);
+                                bitmapTransform(new BlurTransformation(WeatherActivity.this, 25, 8)).into(bingPicImg);
                         if (!(boolean) settings.get("use_bing_pic", true)) {
                             Glide.with(WeatherActivity.this).load(Uri.parse((String) settings.get("uri_string", null))).
                                     error(R.drawable.weather_pic).into(appImage);
@@ -737,8 +742,13 @@ public class WeatherActivity extends BaseActivity implements View.OnClickListene
                         } else {
                             Glide.with(WeatherActivity.this).load(imageUrl).error(R.drawable.weather_pic).into(appImage);
                             String info = images.copyright;
-                            String[] infos = info.split("\\(©");
-                            bingPicInfo.setText(infos[0] + "\n(©" + infos[1]);
+                            String[] picInfo = info.split("\\(©");
+                            StringBuilder infoBuilder = new StringBuilder();
+                            for (int i = 0; i < picInfo.length; i++) {
+                                if (i > 0) infoBuilder.append("\n");
+                                infoBuilder.append(picInfo[i]);
+                            }
+                            bingPicInfo.setText(infoBuilder.toString());
                         }
                     }
                 });

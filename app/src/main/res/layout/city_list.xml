@@ -45,7 +45,8 @@
         android:layout_marginLeft="35dp"
         android:layout_marginRight="35dp"
         android:dividerHeight="0dp"
-        android:listSelector="@android:color/transparent">
+        android:listSelector="@android:color/transparent"
+        android:overScrollMode="never">
 
     </ListView>
 
